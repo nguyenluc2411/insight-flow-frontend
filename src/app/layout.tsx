@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "@/styles/globals.css"
 import { Providers } from "./providers"
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "Forecastly — AI cho Thời trang Việt Nam",
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans bg-bg-base text-slate-900 antialiased">
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   )
