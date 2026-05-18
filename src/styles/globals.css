@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-bg-base text-slate-900 font-sans antialiased; }
+  :root {
+    --background: 248 250 252;
+    --foreground: 15 23 42;
+    --primary: 99 102 241;
+    --primary-foreground: 255 255 255;
+    --border: 226 232 240;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 15 23 42;
+    --foreground: 248 250 252;
+    --border: 51 65 85;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/90 backdrop-blur-[10px] border border-white/20;
+  }
+  .dark .glass-card {
+    @apply bg-slate-800/70 border-slate-700/20;
+  }
+  .brand-gradient {
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .shadow-soft {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+  .chart-bar {
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
