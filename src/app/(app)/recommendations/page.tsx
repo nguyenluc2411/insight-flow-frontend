@@ -1,3 +1,5 @@
+"use client"
+
 import { KPICard } from "@/components/common/KPICard"
 import { StatusBadge } from "@/components/common/StatusBadge"
 import { RiskBadge } from "@/components/common/RiskBadge"
@@ -6,8 +8,11 @@ import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { ProgressBar } from "@/components/common/ProgressBar"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
+import { useRecommendations, useRefreshRecommendations } from "@/hooks/useRecommendations"
+import { ACTION_LABELS } from "@/lib/constants"
+import { useToast } from "@/hooks/use-toast"
 
-// TODO: replace with API calls
+// MOCK: displayed when ML service returns no data yet
 const MOCK_KPIS = [
   { label: "Tổng hành động", value: "12", subtitle: "khuyến nghị của AI", trendType: "neutral" as const },
   { label: "Giảm backlog", value: "-18%", subtitle: "dự kiến sau 30 ngày", trend: "3,400→2,788", trendType: "up" as const },
@@ -68,6 +73,25 @@ const AI_LOGIC_RULES = [
 ]
 
 export default function RecommendationsPage() {
+  const { toast } = useToast()
+  const { data: recoData, isLoading } = useRecommendations()
+  const { mutate: refresh, isPending: isRefreshing } = useRefreshRecommendations()
+
+  const realItems = recoData?.items ?? []
+  const totalActions = recoData?.total ?? MOCK_KPIS[0].value
+
+  const kpis = [
+    { ...MOCK_KPIS[0], value: String(totalActions) },
+    ...MOCK_KPIS.slice(1),
+  ]
+
+  function handleRefresh() {
+    refresh(undefined, {
+      onSuccess: () => toast({ title: "Đang làm mới đề xuất...", description: "Dữ liệu sẽ cập nhật sau vài giây" }),
+      onError: () => toast({ title: "Không thể làm mới", variant: "destructive" }),
+    })
+  }
+
   return (
     <div>
       {/* Header */}
@@ -79,18 +103,24 @@ export default function RecommendationsPage() {
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Đề xuất AI</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Dựa trên dữ liệu bán hàng Q1 2026 và phân tích thị trường
+            Dựa trên dữ liệu bán hàng và phân tích thị trường
           </p>
         </div>
-        <div className="text-right text-xs text-slate-500 dark:text-slate-400">
-          <p>Tạo: <span className="font-semibold">15/04/2026 09:42</span></p>
-          <p>File: <span className="font-semibold">sales_data_q1_2026.xlsx</span></p>
-        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing || isLoading}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary border border-primary/30 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950 disabled:opacity-50 transition"
+        >
+          <span className={`material-symbols-outlined text-[16px] ${isRefreshing ? "animate-spin" : ""}`}>
+            refresh
+          </span>
+          Làm mới
+        </button>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {MOCK_KPIS.map((kpi) => (
+        {kpis.map((kpi) => (
           <KPICard key={kpi.label} {...kpi} />
         ))}
       </div>
@@ -170,34 +200,51 @@ export default function RecommendationsPage() {
       {/* Detail Table */}
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 mb-8">
         <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-          Tất cả đề xuất
+          Tất cả đề xuất {realItems.length > 0 && <span className="text-primary">({realItems.length})</span>}
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800">
-                {["SKU", "Danh mục", "Vấn đề", "Hành động", "Tác động", "Ưu tiên", "Tin cậy"].map((h) => (
-                  <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {MOCK_DETAIL_TABLE.map((row) => (
-                <tr key={row.sku} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.sku}</td>
-                  <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{row.category}</td>
-                  <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{row.issue}</td>
-                  <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{row.action}</td>
-                  <td className="py-3 pr-4 text-green-600 dark:text-green-400 text-xs font-medium">{row.impact}</td>
-                  <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
-                  <td className="py-3"><ConfidenceBadge value={row.confidence} /></td>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1,2,3].map(i => <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />)}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800">
+                  {["SKU", "Danh mục", "Hành động", "Lý do", "Ưu tiên", "Tin cậy"].map((h) => (
+                    <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {realItems.length > 0
+                  ? realItems.map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.sku ?? row.variantId.slice(0,8)}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{row.category ?? "—"}</td>
+                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{ACTION_LABELS[row.action] ?? row.action}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 text-xs max-w-[200px] truncate">{row.reason}</td>
+                        <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
+                        <td className="py-3"><ConfidenceBadge value={Math.round((row.confidence ?? 0) * 100)} /></td>
+                      </tr>
+                    ))
+                  : MOCK_DETAIL_TABLE.map((row) => (
+                      <tr key={row.sku} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.sku}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{row.category}</td>
+                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{row.action}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{row.issue}</td>
+                        <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
+                        <td className="py-3"><ConfidenceBadge value={row.confidence} /></td>
+                      </tr>
+                    ))
+                }
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Action Distribution + AI Logic */}

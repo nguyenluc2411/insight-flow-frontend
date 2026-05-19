@@ -33,4 +33,17 @@ api.interceptors.response.use(
   }
 )
 
+export const mlApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_ML_URL || "http://localhost:8000",
+  headers: { "Content-Type": "application/json" },
+  timeout: 30000,
+})
+
+mlApi.interceptors.request.use((config) => {
+  const { accessToken, tenant } = useAuthStore.getState()
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
+  if (tenant?.id) config.headers["X-Tenant-Id"] = tenant.id
+  return config
+})
+
 export default api
