@@ -32,10 +32,19 @@ export interface InventoryVariant {
 export interface InventoryMovement {
   id: string
   variantId: string
-  type: "IN" | "OUT"
-  quantity: number
+  locationId: string
+  movementType: "IN" | "OUT"
+  quantityChange: number
   note?: string
   createdAt: string
+}
+
+export interface RecordMovementRequest {
+  variantId: string
+  locationId: string
+  movementType: "IN" | "OUT"
+  quantityChange: number
+  note?: string
 }
 
 export const catalogService = {
@@ -44,7 +53,8 @@ export const catalogService = {
     return data
   },
 
-  async getInventory(variantId: string): Promise<InventoryVariant> {
+  // Returns array of inventory records for a variant (GET /variants/{id} returns [])
+  async getInventory(variantId: string): Promise<InventoryVariant[]> {
     const { data } = await api.get(`/api/v1/catalog/inventory/variants/${variantId}`)
     return data
   },
@@ -54,7 +64,7 @@ export const catalogService = {
     return data
   },
 
-  async recordMovement(payload: { variantId: string; type: "IN" | "OUT"; quantity: number; note?: string }): Promise<InventoryMovement> {
+  async recordMovement(payload: RecordMovementRequest): Promise<InventoryMovement> {
     const { data } = await api.post("/api/v1/catalog/inventory/movements", payload)
     return data
   },
