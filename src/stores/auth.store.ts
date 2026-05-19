@@ -7,6 +7,7 @@ interface AuthState {
   user: User | null
   tenant: Tenant | null
   accessToken: string | null
+  refreshTokenValue: string | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (tenantSlug: string, email: string, password: string) => Promise<void>
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       tenant: null,
       accessToken: null,
+      refreshTokenValue: null,
       isAuthenticated: false,
       isLoading: false,
 
@@ -38,6 +40,7 @@ export const useAuthStore = create<AuthState>()(
           user: data.user,
           tenant,
           accessToken: data.accessToken,
+          refreshTokenValue: data.refreshToken,
           isAuthenticated: true,
         })
       },
@@ -59,12 +62,15 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        set({ user: null, tenant: null, accessToken: null, isAuthenticated: false })
+        set({ user: null, tenant: null, accessToken: null, refreshTokenValue: null, isAuthenticated: false })
       },
 
       refreshToken: async () => {
-        const { data } = await api.post<AuthResponse>("/api/v1/auth/refresh")
-        set({ accessToken: data.accessToken })
+        const currentRefreshToken = useAuthStore.getState().refreshTokenValue
+        const { data } = await api.post<AuthResponse>("/api/v1/auth/refresh", {
+          refreshToken: currentRefreshToken,
+        })
+        set({ accessToken: data.accessToken, refreshTokenValue: data.refreshToken ?? currentRefreshToken })
       },
 
       updateTenantSettings: (settings) => {
@@ -81,6 +87,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         tenant: state.tenant,
         accessToken: state.accessToken,
+        refreshTokenValue: state.refreshTokenValue,
         isAuthenticated: state.isAuthenticated,
       }),
     }
