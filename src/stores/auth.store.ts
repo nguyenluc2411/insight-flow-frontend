@@ -13,6 +13,7 @@ interface AuthState {
   logout: () => void
   refreshToken: () => Promise<void>
   setAuth: (data: AuthResponse) => void
+  setUser: (user: User) => void
   updateTenantSettings: (settings: Record<string, unknown>) => void
 }
 
@@ -26,12 +27,23 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       setAuth: (data: AuthResponse) => {
+        // Build tenant from response or from user fields when login doesn't return tenant
+        const tenant: Tenant = data.tenant ?? {
+          id: data.user.tenantId,
+          name: data.user.tenantSlug,
+          slug: data.user.tenantSlug,
+          plan: "trial",
+        }
         set({
           user: data.user,
-          tenant: data.tenant,
+          tenant,
           accessToken: data.accessToken,
           isAuthenticated: true,
         })
+      },
+
+      setUser: (user: User) => {
+        set({ user })
       },
 
       login: async (tenantSlug, email, password) => {
@@ -63,6 +75,14 @@ export const useAuthStore = create<AuthState>()(
         }))
       },
     }),
-    { name: "auth-storage", partialize: (state) => ({ tenant: state.tenant, user: state.user }) }
+    {
+      name: "auth-storage",
+      partialize: (state) => ({
+        user: state.user,
+        tenant: state.tenant,
+        accessToken: state.accessToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
   )
 )

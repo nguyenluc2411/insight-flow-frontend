@@ -2,10 +2,13 @@ export interface User {
   id: string
   email: string
   fullName: string
+  tenantId: string
+  tenantSlug: string
+  roles: string[]
   phone?: string
-  status: "active" | "inactive"
+  status?: "active" | "inactive"
   lastLoginAt?: string
-  createdAt: string
+  createdAt?: string
 }
 
 export interface Tenant {
@@ -13,7 +16,7 @@ export interface Tenant {
   name: string
   slug: string
   plan: "trial" | "starter" | "pro"
-  status: "active" | "inactive"
+  status?: "active" | "inactive"
   trialEndsAt?: string
   settings?: TenantSettings
 }
@@ -31,7 +34,7 @@ export interface AuthResponse {
   refreshToken: string
   expiresIn: number
   user: User
-  tenant: Tenant
+  tenant?: Tenant
 }
 
 export interface LoginRequest {

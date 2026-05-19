@@ -1,15 +1,39 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, APP_NAME, ROUTES } from "@/lib/constants"
+import { useAuthStore } from "@/stores/auth.store"
+import { authService } from "@/services/auth.service"
 
 export function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [lang, setLang] = useState<"VI" | "EN">("VI")
+  const [avatarOpen, setAvatarOpen] = useState(false)
+  const avatarRef = useRef<HTMLDivElement>(null)
+  const { user, tenant, logout } = useAuthStore()
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setAvatarOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  async function handleLogout() {
+    try { await authService.logout() } catch { /* ignore */ }
+    logout()
+    router.push(ROUTES.LOGIN)
+  }
+
+  const initials = user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-[10px] border-b border-slate-100 dark:border-slate-800">
@@ -56,10 +80,43 @@ export function Header() {
               {lang}
             </button>
 
-            {/* Avatar */}
-            <button className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity">
-              <span className="material-symbols-outlined text-[18px]">person</span>
-            </button>
+            {/* Avatar Dropdown */}
+            <div className="relative" ref={avatarRef}>
+              <button
+                onClick={() => setAvatarOpen((o) => !o)}
+                className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity"
+              >
+                {initials}
+              </button>
+              {avatarOpen && (
+                <div className="absolute right-0 top-10 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-lg py-1 z-50">
+                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                      {user?.fullName ?? "—"}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
+                    {tenant?.name && (
+                      <p className="text-xs text-primary font-medium mt-0.5 truncate">{tenant.name}</p>
+                    )}
+                  </div>
+                  <Link
+                    href={ROUTES.SETTINGS_PROFILE}
+                    onClick={() => setAvatarOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
+                    Cài đặt tài khoản
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">logout</span>
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Mobile Hamburger */}
             <button

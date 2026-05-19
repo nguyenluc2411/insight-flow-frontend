@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useOnboardingStore } from "@/stores/onboarding.store"
 import { useAuthStore } from "@/stores/auth.store"
+import { authService } from "@/services/auth.service"
 import { ROUTES, LOCATIONS, FASHION_CATEGORIES, BUSINESS_SCALES, PLATFORMS, APP_NAME } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -28,15 +29,13 @@ export default function OnboardingPage() {
 
   async function handleFinish() {
     setIsLoading(true)
-    updateTenantSettings({
-      location,
-      categories,
-      businessScale,
-      platforms,
-      profileComplete: true,
-    })
-    // TODO: replace with authService.updateProfile() API call
-    await new Promise((r) => setTimeout(r, 800))
+    const settings = { location: location ?? undefined, categories, businessScale: businessScale ?? undefined, platforms, profileComplete: true }
+    try {
+      await authService.updateProfile(settings)
+    } catch {
+      // MOCK: PUT /api/v1/auth/me not fully implemented — persist locally
+    }
+    updateTenantSettings(settings)
     setIsLoading(false)
     router.push(ROUTES.MARKET)
   }
