@@ -16,10 +16,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.push(ROUTES.LOGIN)
       return
     }
-    authService.me().then(setUser).catch(() => {
-      logout()
-      router.push(ROUTES.LOGIN)
-    })
+    authService.me()
+      .then((updatedUser) => {
+        setUser(updatedUser)
+        if (!updatedUser.profileComplete) {
+          router.push(ROUTES.ONBOARDING)
+        }
+      })
+      .catch(() => {
+        logout()
+        router.push(ROUTES.LOGIN)
+      })
   }, [isAuthenticated, accessToken, setUser, logout, router])
 
   if (!isAuthenticated) return null

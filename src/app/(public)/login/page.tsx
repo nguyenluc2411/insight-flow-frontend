@@ -26,8 +26,8 @@ export default function LoginPage() {
   async function onSubmit(data: LoginFormData) {
     try {
       await login(data.tenantSlug, data.email, data.password)
-      const currentTenant = useAuthStore.getState().tenant
-      if (currentTenant?.settings?.profileComplete) {
+      const currentUser = useAuthStore.getState().user
+      if (currentUser?.profileComplete) {
         router.push(ROUTES.DASHBOARD)
       } else {
         router.push(ROUTES.ONBOARDING)

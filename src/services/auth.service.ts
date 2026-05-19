@@ -21,7 +21,9 @@ export const authService = {
     const { data } = await api.get("/api/v1/auth/me")
     return data
   },
-  async updateProfile(settings: TenantSettings): Promise<void> {
-    await api.put("/api/v1/auth/me", settings)
+  // Returns full UserInfo with settings after update
+  async updateProfile(settings: TenantSettings): Promise<User> {
+    const { data } = await api.put("/api/v1/auth/me", settings)
+    return data
   },
 }

@@ -56,6 +56,9 @@ export const useAuthStore = create<AuthState>()(
             tenantSlug, email, password,
           })
           get().setAuth(data)
+          // Fetch full user profile (includes profileComplete) after auth token is set
+          const { data: fullUser } = await api.get<User>("/api/v1/auth/me")
+          set({ user: fullUser })
         } finally {
           set({ isLoading: false })
         }

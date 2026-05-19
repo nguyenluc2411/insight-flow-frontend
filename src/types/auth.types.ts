@@ -5,6 +5,12 @@ export interface User {
   tenantId: string
   tenantSlug: string
   roles: string[]
+  // Profile settings (returned by GET/PUT /api/v1/auth/me)
+  location?: string
+  categories?: string[]
+  businessScale?: string
+  platforms?: string[]
+  profileComplete?: boolean
   phone?: string
   status?: "active" | "inactive"
   lastLoginAt?: string

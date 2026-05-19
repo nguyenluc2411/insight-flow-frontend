@@ -17,27 +17,38 @@ const STEPS = [
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { updateTenantSettings } = useAuthStore()
+  const { updateTenantSettings, setUser } = useAuthStore()
   const {
     location, categories, businessScale, platforms,
     currentStep, setLocation, toggleCategory, setScale, togglePlatform,
     nextStep, prevStep,
   } = useOnboardingStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const progress = Math.round((currentStep / 3) * 100)
 
   async function handleFinish() {
     setIsLoading(true)
-    const settings = { location: location ?? undefined, categories, businessScale: businessScale ?? undefined, platforms, profileComplete: true }
-    try {
-      await authService.updateProfile(settings)
-    } catch {
-      // MOCK: PUT /api/v1/auth/me not fully implemented — persist locally
+    setError(null)
+    const settings = {
+      location: location ?? undefined,
+      categories,
+      businessScale: businessScale ?? undefined,
+      platforms,
+      profileComplete: true,
     }
-    updateTenantSettings(settings)
-    setIsLoading(false)
-    router.push(ROUTES.MARKET)
+    try {
+      const updatedUser = await authService.updateProfile(settings)
+      setUser(updatedUser)
+      updateTenantSettings(settings)
+      router.push(ROUTES.MARKET)
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail ?? "Không thể lưu thông tin. Vui lòng thử lại.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -228,6 +239,13 @@ export default function OnboardingPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg text-sm text-red-700 dark:text-red-400">
+              {error}
             </div>
           )}
 
