@@ -1,29 +1,38 @@
+"use client"
+
 import { KPICard } from "@/components/common/KPICard"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
-
-// TODO: replace mock data with API calls
-const MOCK_KPIS = [
-  { label: "Tổng SKU", value: "100", subtitle: "sản phẩm đang theo dõi", trend: "+8 tuần này", trendType: "up" as const },
-  { label: "Đơn hàng hôm nay", value: "24", subtitle: "so với 18 hôm qua", trend: "+33%", trendType: "up" as const },
-  { label: "Cảnh báo tồn kho", value: "12", subtitle: "SKU cần xử lý", trend: "3 nghiêm trọng", trendType: "down" as const },
-  { label: "Forecast độ chính xác", value: "89%", subtitle: "30 ngày gần nhất", trend: "+2%", trendType: "up" as const },
-]
+import { useDashboard } from "@/hooks/useDashboard"
+import { useAuthStore } from "@/stores/auth.store"
 
 export default function DashboardPage() {
+  const { data: summary, isLoading } = useDashboard()
+  const user = useAuthStore((s) => s.user)
+  const tenant = useAuthStore((s) => s.tenant)
+
+  const kpis = [
+    { label: "Tổng SKU", value: isLoading ? "..." : String(summary?.totalSKU ?? 0), subtitle: "sản phẩm đang theo dõi", trendType: "neutral" as const },
+    { label: "Đề xuất AI", value: isLoading ? "..." : String(summary?.totalRecommendations ?? 0), subtitle: "hành động chờ xử lý", trendType: "neutral" as const },
+    { label: "Trạng thái AI", value: summary?.mlHealthy ? "Online" : "—", subtitle: "ml-service", trendType: summary?.mlHealthy ? ("up" as const) : ("neutral" as const) },
+    { label: "Gói dịch vụ", value: tenant?.plan ?? "trial", subtitle: "plan hiện tại", trendType: "neutral" as const },
+  ]
+
   return (
     <div>
       {/* Greeting */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Xin chào!</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          Xin chào{user?.fullName ? `, ${user.fullName.split(" ").pop()}` : ""}!
+        </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Đây là tổng quan hoạt động của shop bạn hôm nay.
+          {tenant?.name ?? "Shop của bạn"} — tổng quan hoạt động hôm nay.
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {MOCK_KPIS.map((kpi) => (
+        {kpis.map((kpi) => (
           <KPICard key={kpi.label} {...kpi} />
         ))}
       </div>
@@ -65,22 +74,24 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Empty state hint */}
-      <div className="mt-8 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 rounded-xl p-5 flex items-center gap-4">
-        <span className="material-symbols-outlined text-indigo-500 text-3xl">cloud_upload</span>
-        <div className="flex-1">
-          <p className="font-semibold text-indigo-800 dark:text-indigo-200">Chưa có dữ liệu thực</p>
-          <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-0.5">
-            Tải dữ liệu đơn hàng để nhận phân tích AI chính xác
-          </p>
+      {/* Empty state — only shown when no data */}
+      {!isLoading && !summary?.hasData && (
+        <div className="mt-8 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 rounded-xl p-5 flex items-center gap-4">
+          <span className="material-symbols-outlined text-indigo-500 text-3xl">cloud_upload</span>
+          <div className="flex-1">
+            <p className="font-semibold text-indigo-800 dark:text-indigo-200">Chưa có dữ liệu thực</p>
+            <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-0.5">
+              Tải dữ liệu đơn hàng để nhận phân tích AI chính xác
+            </p>
+          </div>
+          <Link
+            href={ROUTES.HEALTH_CHECK_IMPORT}
+            className="shrink-0 px-4 py-2 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition"
+          >
+            Tải dữ liệu
+          </Link>
         </div>
-        <Link
-          href={ROUTES.HEALTH_CHECK_IMPORT}
-          className="shrink-0 px-4 py-2 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition"
-        >
-          Tải dữ liệu
-        </Link>
-      </div>
+      )}
     </div>
   )
 }
