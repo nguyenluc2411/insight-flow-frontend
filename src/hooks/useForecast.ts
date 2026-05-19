@@ -1,22 +1,19 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { mlService } from "@/services/ml.service"
+import { bffService } from "@/services/bff.service"
+import { useAuthStore } from "@/stores/auth.store"
+import type { ForecastSummaryResponse } from "@/types/bff.types"
 
-export function useForecast(variantId?: string) {
-  return useQuery({
-    queryKey: ["forecast", variantId],
-    queryFn: () => mlService.getForecast(variantId!, 30),
-    enabled: !!variantId,
-    staleTime: 10 * 60 * 1000,
-  })
-}
+export type { ForecastSummaryResponse }
 
-export function useForecastBatch(variantIds: string[]) {
-  return useQuery({
-    queryKey: ["forecast-batch", variantIds],
-    queryFn: () => mlService.getForecastBatch(variantIds, 30),
-    enabled: variantIds.length > 0,
+export function useForecastSummary() {
+  const tenantId = useAuthStore((s) => s.tenant?.id)
+
+  return useQuery<ForecastSummaryResponse>({
+    queryKey: ["forecast-summary", tenantId],
+    queryFn: () => bffService.getForecastSummary(),
+    enabled: !!tenantId,
     staleTime: 10 * 60 * 1000,
   })
 }

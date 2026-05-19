@@ -9,6 +9,7 @@ import { registerSchema, type RegisterFormData } from "@/lib/validations"
 import { authService } from "@/services/auth.service"
 import { useAuthStore } from "@/stores/auth.store"
 import { useToast } from "@/hooks/use-toast"
+import { parseApiError } from "@/lib/errors"
 import { ROUTES, APP_NAME } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
@@ -51,11 +52,7 @@ export default function RegisterPage() {
       setAuth(result)
       router.push(ROUTES.ONBOARDING)
     } catch (err: unknown) {
-      const detail =
-        err instanceof Error
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? err.message
-          : "Đăng ký thất bại"
-      toast({ title: "Lỗi đăng ký", description: detail, variant: "destructive" })
+      toast({ title: "Lỗi đăng ký", description: parseApiError(err, "Đăng ký thất bại"), variant: "destructive" })
     } finally {
       setIsLoading(false)
     }

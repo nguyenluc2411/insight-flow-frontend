@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { loginSchema, type LoginFormData } from "@/lib/validations"
 import { useAuthStore } from "@/stores/auth.store"
 import { useToast } from "@/hooks/use-toast"
+import { parseApiError } from "@/lib/errors"
 import { ROUTES, APP_NAME } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
@@ -33,11 +34,7 @@ export default function LoginPage() {
         router.push(ROUTES.ONBOARDING)
       }
     } catch (err: unknown) {
-      const detail =
-        err instanceof Error
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? err.message
-          : "Đăng nhập thất bại"
-      toast({ title: "Lỗi đăng nhập", description: detail, variant: "destructive" })
+      toast({ title: "Lỗi đăng nhập", description: parseApiError(err, "Đăng nhập thất bại"), variant: "destructive" })
     }
   }
 

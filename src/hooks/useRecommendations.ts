@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { mlService } from "@/services/ml.service"
+import { bffService } from "@/services/bff.service"
+import { useAuthStore } from "@/stores/auth.store"
 
 export function useRecommendations(filters?: { action?: string; priority?: string; page?: number }) {
   return useQuery({
@@ -11,10 +13,12 @@ export function useRecommendations(filters?: { action?: string; priority?: strin
   })
 }
 
-export function useRecommendationSummary() {
+export function useRecommendationsSummary() {
+  const tenantId = useAuthStore((s) => s.tenant?.id)
   return useQuery({
-    queryKey: ["recommendations-summary"],
-    queryFn: () => mlService.getSummary(),
+    queryKey: ["recommendations-summary", tenantId],
+    queryFn: () => bffService.getRecommendationsSummary(),
+    enabled: !!tenantId,
     staleTime: 5 * 60 * 1000,
   })
 }

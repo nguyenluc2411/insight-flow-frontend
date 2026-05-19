@@ -11,27 +11,6 @@ import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
 import { useHealthCheck } from "@/hooks/useHealthCheck"
 
-// MOCK: inventory metrics endpoints not available — using catalog products count for totalSKU
-const MOCK_KPIS_BASE = [
-  { label: "Áp lực tồn kho", value: "45%", subtitle: "450 / 1,000 đơn vị", trend: "+5%", trendType: "down" as const },
-  { label: "Tỷ lệ sell-through", value: "41%", subtitle: "thấp hơn 15% so với ngành", trend: "-15%", trendType: "down" as const },
-  { label: "SKU chậm bán", value: "32%", subtitle: "32 / 100 SKU cần xử lý", trend: "12 nghiêm trọng", trendType: "down" as const },
-  { label: "Rủi ro kênh bán", value: "72%", subtitle: "TikTok Shop", trend: "phụ thuộc cao", trendType: "down" as const },
-]
-
-const MOCK_CATEGORIES = [
-  { name: "Quần (Bottoms)", value: 1240, total: 2000 },
-  { name: "Đồ khoác hè", value: 860, total: 2000 },
-  { name: "Phụ kiện", value: 420, total: 2000 },
-  { name: "Váy/Đầm", value: 180, total: 2000 },
-]
-
-const MOCK_CHANNELS = [
-  { name: "TikTok Shop", orders: 720, rate: 82 },
-  { name: "Website", orders: 140, rate: 34 },
-  { name: "Cửa hàng Flagship", orders: 90, rate: 21 },
-]
-
 const MOCK_RISK_ITEMS = [
   { sku: "SKU-001", name: "Quần Wide Leg Trousers Đen", stock: 420, sellThrough: 18, risk: "HIGH" as const },
   { sku: "SKU-002", name: "Áo Khoác Light Summer Jacket", stock: 280, sellThrough: 24, risk: "HIGH" as const },
@@ -43,39 +22,78 @@ const MOCK_RISK_ITEMS = [
 const MOCK_ISSUES = [
   {
     icon: "inventory_2",
-    title: "450 đơn vị tồn kho quá mức tại TP.HCM",
+    title: "Tồn kho quá mức tại TP.HCM",
     description: "Quần Wide Leg và Áo khoác hè tập trung 68% tồn kho — cần phân phối lại ngay",
     severity: "NGHIÊM TRỌNG" as const,
   },
   {
     icon: "location_on",
     title: "Cơ hội phân phối sang Hà Nội",
-    description: "Xu hướng Bottoms đang tăng 28% tại Hà Nội trong Q2 — chuyển 150 đv từ TP.HCM",
+    description: "Xu hướng Bottoms đang tăng 28% tại Hà Nội trong Q2 — chuyển hàng từ TP.HCM",
     severity: "CHIẾN LƯỢC" as const,
   },
   {
     icon: "sell",
-    title: "Summer Light Jacket cần markdown 12%",
-    description: "Sell-through chỉ 24% sau 45 ngày — giảm giá ngay để tránh tồn cuối mùa",
+    title: "Summer Light Jacket cần markdown",
+    description: "Sell-through thấp sau 45 ngày — giảm giá để tránh tồn cuối mùa",
     severity: "QUAN TRỌNG" as const,
   },
 ]
 
 const AI_INSIGHTS = [
-  "Áp lực tồn kho 45% cao hơn 15% so với benchmark ngành thời trang VN",
-  "TikTok Shop chiếm 72% doanh số nhưng 28% sản phẩm chưa được tối ưu cho kênh này",
-  "Bottoms (Quần) là danh mục có rủi ro cao nhất — 1,240 đơn vị tồn đọng",
-  "Nếu không có hành động trong 30 ngày, markdown bắt buộc ≥20% cho 32 SKU",
+  "Áp lực tồn kho cao hơn benchmark ngành thời trang VN",
+  "TikTok Shop chiếm tỷ trọng lớn doanh số nhưng nhiều sản phẩm chưa được tối ưu",
+  "Bottoms là danh mục có rủi ro cao nhất",
+  "Nếu không có hành động trong 30 ngày, markdown bắt buộc cho nhiều SKU",
 ]
 
 export default function HealthCheckPage() {
-  const { data: healthData, isLoading } = useHealthCheck()
+  const { data: health, isLoading } = useHealthCheck()
 
-  const kpis = MOCK_KPIS_BASE.map((kpi, i) =>
-    i === 2
-      ? { ...kpi, subtitle: `${healthData?.totalSKU ?? 32} / ${healthData?.totalProducts ?? 100} SKU cần xử lý` }
-      : kpi
-  )
+  const pressurePct = health?.inventoryPressurePct ?? 0
+  const sellThrough = health?.sellThroughRate ?? 0
+  const slowSKU = health?.slowMovingSKUCount ?? 0
+
+  const kpis = [
+    {
+      label: "Áp lực tồn kho",
+      value: isLoading ? "..." : `${pressurePct.toFixed(0)}%`,
+      subtitle: "tỷ lệ tồn kho so với capacity",
+      trendType: pressurePct > 60 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "Tỷ lệ sell-through",
+      value: isLoading ? "..." : `${sellThrough.toFixed(0)}%`,
+      subtitle: "thấp hơn benchmark ngành",
+      trendType: sellThrough < 40 ? ("down" as const) : ("up" as const),
+    },
+    {
+      label: "SKU chậm bán",
+      value: isLoading ? "..." : String(slowSKU),
+      subtitle: "SKU cần xử lý",
+      trendType: slowSKU > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "Rủi ro kênh bán",
+      value: isLoading ? "..." : (health?.channelPerformance?.[0]?.channel ?? "—"),
+      subtitle: "kênh chiếm tỷ trọng cao nhất",
+      trendType: "neutral" as const,
+    },
+  ]
+
+  // Map BFF CategoryRisk → chart format
+  const categoryChartData = (health?.categoryRisks ?? []).map((c) => ({
+    name: c.category,
+    value: c.units,
+    total: Math.max(c.units * 2, 100),
+  }))
+
+  // Map BFF ChannelPerformance → component format
+  const channelData = (health?.channelPerformance ?? []).map((c) => ({
+    name: c.channel,
+    orders: c.orders,
+    rate: Math.round(c.rate),
+  }))
 
   return (
     <div>
@@ -91,7 +109,10 @@ export default function HealthCheckPage() {
           </h1>
         </div>
         <div className="text-right text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
-          <p>SKU: <span className="font-semibold">{isLoading ? "..." : (healthData?.totalSKU ?? 0)}</span></p>
+          <p>SKU chậm bán: <span className="font-semibold">{isLoading ? "..." : slowSKU}</span></p>
+          {health?.lastUpdated && (
+            <p>Cập nhật: {new Date(health.lastUpdated).toLocaleTimeString("vi-VN")}</p>
+          )}
         </div>
       </div>
 
@@ -100,68 +121,75 @@ export default function HealthCheckPage() {
         <KPIGrid data={kpis} />
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Category Risk Chart */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-              Tồn kho theo danh mục
-            </h2>
-            <CategoryRiskChart categories={MOCK_CATEGORIES} />
-          </div>
-
-          {/* Risk Item Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-              SKU cần xử lý
-            </h2>
-            <RiskItemTable items={MOCK_RISK_ITEMS} />
-          </div>
-
-          {/* Priority Issues */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-              Vấn đề ưu tiên
-            </h2>
-            <PriorityIssues issues={MOCK_ISSUES} />
-          </div>
+      {/* Skeleton while loading */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+          ))}
         </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Category Risk Chart */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
+                Tồn kho theo danh mục
+              </h2>
+              <CategoryRiskChart categories={categoryChartData.length > 0 ? categoryChartData : [
+                { name: "Chưa có dữ liệu", value: 0, total: 100 }
+              ]} />
+            </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Channel Performance */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-              Hiệu suất kênh bán
-            </h2>
-            <ChannelPerformance channels={MOCK_CHANNELS} />
+            {/* Risk Item Table */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
+                SKU cần xử lý
+              </h2>
+              <RiskItemTable items={MOCK_RISK_ITEMS} />
+            </div>
+
+            {/* Priority Issues */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
+                Vấn đề ưu tiên
+              </h2>
+              <PriorityIssues issues={MOCK_ISSUES} />
+            </div>
           </div>
 
-          {/* AI Insights */}
-          <AIInsightBox
-            title="Phân tích AI"
-            items={AI_INSIGHTS}
-            variant="dark"
-          />
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Channel Performance */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
+                Hiệu suất kênh bán
+              </h2>
+              <ChannelPerformance channels={channelData.length > 0 ? channelData : [
+                { name: "Chưa có dữ liệu", orders: 0, rate: 0 }
+              ]} />
+            </div>
 
-          {/* Full analysis */}
-          <div className="bg-green-50 dark:bg-green-950 rounded-xl p-4 border border-green-200 dark:border-green-900">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-[18px]">
-                task_alt
-              </span>
-              <p className="text-sm font-bold text-green-800 dark:text-green-200">
-                Phân tích đầy đủ đã được tạo
+            {/* AI Insights */}
+            <AIInsightBox title="Phân tích AI" items={AI_INSIGHTS} variant="dark" />
+
+            <div className="bg-green-50 dark:bg-green-950 rounded-xl p-4 border border-green-200 dark:border-green-900">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-[18px]">
+                  task_alt
+                </span>
+                <p className="text-sm font-bold text-green-800 dark:text-green-200">
+                  Phân tích đầy đủ đã được tạo
+                </p>
+              </div>
+              <p className="text-xs text-green-700 dark:text-green-300">
+                Đề xuất hành động và dự báo Q2 2026 đã sẵn sàng
               </p>
             </div>
-            <p className="text-xs text-green-700 dark:text-green-300">
-              12 đề xuất hành động và dự báo Q2 2026 đã sẵn sàng
-            </p>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Bottom CTA */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -172,7 +200,7 @@ export default function HealthCheckPage() {
           <span className="material-symbols-outlined text-white text-3xl">recommend</span>
           <div className="text-white">
             <p className="font-bold">Xem Đề xuất AI</p>
-            <p className="text-indigo-200 text-sm">12 hành động ưu tiên</p>
+            <p className="text-indigo-200 text-sm">Hành động ưu tiên tối ưu tồn kho</p>
           </div>
         </Link>
         <Link

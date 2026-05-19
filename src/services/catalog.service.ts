@@ -1,13 +1,20 @@
 import api from "@/lib/axios"
 
+/** Matches ProductResponse from catalog-service */
 export interface Product {
   id: string
   tenantId: string
+  skuRoot: string        // was incorrectly "sku" — backend field is skuRoot
   name: string
-  sku: string
-  category?: string
-  price?: number
+  description?: string
+  categoryId?: string    // UUID — backend does NOT return category name here
+  brand?: string
+  season?: string
+  gender?: string
+  tags?: string[]
   status?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface SpringPage<T> {
@@ -21,21 +28,48 @@ export interface SpringPage<T> {
   empty: boolean
 }
 
-export interface InventoryVariant {
+/** Matches VariantResponse from catalog-service */
+export interface ProductVariant {
   id: string
+  tenantId: string
   productId: string
   sku: string
-  quantityOnHand: number
-  quantitySold?: number
+  barcode?: string
+  size?: string
+  color?: string
+  colorHex?: string
+  costPrice?: number
+  sellingPrice?: number
+  compareAtPrice?: number
+  status?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
-export interface InventoryMovement {
+/** Matches InventoryLevelResponse from catalog-service */
+export interface InventoryLevel {
   id: string
+  variantId: string
+  locationId: string
+  locationName?: string
+  quantityOnHand: number
+  quantityReserved: number
+  quantityAvailable: number
+  reorderPoint?: number
+  updatedAt?: string
+}
+
+/** Matches InventoryMovementResponse from catalog-service */
+export interface InventoryMovement {
+  id: number
   variantId: string
   locationId: string
   movementType: "IN" | "OUT"
   quantityChange: number
-  note?: string
+  referenceType?: string
+  referenceId?: string
+  notes?: string
+  createdBy?: string
   createdAt: string
 }
 
@@ -44,17 +78,22 @@ export interface RecordMovementRequest {
   locationId: string
   movementType: "IN" | "OUT"
   quantityChange: number
-  note?: string
+  notes?: string
 }
 
 export const catalogService = {
-  async getProducts(params?: { page?: number; size?: number; category?: string; search?: string }): Promise<SpringPage<Product>> {
+  async getProducts(params?: { page?: number; size?: number; search?: string }): Promise<SpringPage<Product>> {
     const { data } = await api.get("/api/v1/catalog/products", { params })
     return data
   },
 
-  // Returns array of inventory records for a variant (GET /variants/{id} returns [])
-  async getInventory(variantId: string): Promise<InventoryVariant[]> {
+  async getProduct(id: string): Promise<Product> {
+    const { data } = await api.get(`/api/v1/catalog/products/${id}`)
+    return data
+  },
+
+  // Returns InventoryLevelResponse[] for a specific variantId
+  async getInventoryLevels(variantId: string): Promise<InventoryLevel[]> {
     const { data } = await api.get(`/api/v1/catalog/inventory/variants/${variantId}`)
     return data
   },
@@ -66,6 +105,11 @@ export const catalogService = {
 
   async recordMovement(payload: RecordMovementRequest): Promise<InventoryMovement> {
     const { data } = await api.post("/api/v1/catalog/inventory/movements", payload)
+    return data
+  },
+
+  async getLocations() {
+    const { data } = await api.get("/api/v1/catalog/locations")
     return data
   },
 }

@@ -7,15 +7,38 @@ import { useDashboard } from "@/hooks/useDashboard"
 import { useAuthStore } from "@/stores/auth.store"
 
 export default function DashboardPage() {
-  const { data: summary, isLoading } = useDashboard()
+  const { data: overview, isLoading } = useDashboard()
   const user = useAuthStore((s) => s.user)
   const tenant = useAuthStore((s) => s.tenant)
 
+  const mlOnline = overview?.mlStatus === "UP"
+  const hasData = (overview?.totalSKU ?? 0) > 0
+
   const kpis = [
-    { label: "Tổng SKU", value: isLoading ? "..." : String(summary?.totalSKU ?? 0), subtitle: "sản phẩm đang theo dõi", trendType: "neutral" as const },
-    { label: "Đề xuất AI", value: isLoading ? "..." : String(summary?.totalRecommendations ?? 0), subtitle: "hành động chờ xử lý", trendType: "neutral" as const },
-    { label: "Trạng thái AI", value: summary?.mlHealthy ? "Online" : "—", subtitle: "ml-service", trendType: summary?.mlHealthy ? ("up" as const) : ("neutral" as const) },
-    { label: "Gói dịch vụ", value: tenant?.plan ?? "trial", subtitle: "plan hiện tại", trendType: "neutral" as const },
+    {
+      label: "Tổng SKU",
+      value: isLoading ? "..." : String(overview?.totalSKU ?? 0),
+      subtitle: "sản phẩm đang theo dõi",
+      trendType: "neutral" as const,
+    },
+    {
+      label: "Cảnh báo",
+      value: isLoading ? "..." : String(overview?.highPriorityAlerts ?? 0),
+      subtitle: "ưu tiên cao cần xử lý",
+      trendType: (overview?.highPriorityAlerts ?? 0) > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "ML Service",
+      value: isLoading ? "..." : (mlOnline ? "Online" : "Offline"),
+      subtitle: "trạng thái dịch vụ AI",
+      trendType: mlOnline ? ("up" as const) : ("neutral" as const),
+    },
+    {
+      label: "Gói dịch vụ",
+      value: tenant?.plan ?? "trial",
+      subtitle: "plan hiện tại",
+      trendType: "neutral" as const,
+    },
   ]
 
   return (
@@ -67,15 +90,15 @@ export default function DashboardPage() {
             <div>
               <p className="font-bold text-slate-900 dark:text-slate-100">Đề xuất AI</p>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                12 hành động ưu tiên để tối ưu tồn kho và tăng doanh thu
+                Hành động ưu tiên để tối ưu tồn kho và tăng doanh thu
               </p>
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Empty state — only shown when no data */}
-      {!isLoading && !summary?.hasData && (
+      {/* Empty state — shown when no data yet */}
+      {!isLoading && !hasData && (
         <div className="mt-8 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 rounded-xl p-5 flex items-center gap-4">
           <span className="material-symbols-outlined text-indigo-500 text-3xl">cloud_upload</span>
           <div className="flex-1">

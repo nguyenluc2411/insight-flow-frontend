@@ -7,6 +7,7 @@ import { WorkflowSteps } from "@/components/import/WorkflowSteps"
 import { ProgressBar } from "@/components/common/ProgressBar"
 import { uploadService } from "@/services/upload.service"
 import { useToast } from "@/hooks/use-toast"
+import { parseApiError } from "@/lib/errors"
 import { ROUTES } from "@/lib/constants"
 
 const FORMAT_CARDS = [
@@ -79,9 +80,9 @@ export default function ImportPage() {
       }
     } catch (err: unknown) {
       // MOCK: upload service not fully implemented — simulate success
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      if (detail) {
-        toast({ title: "Lỗi tải lên", description: detail, variant: "destructive" })
+      const errMsg = parseApiError(err, "")
+      if (errMsg) {
+        toast({ title: "Lỗi tải lên", description: errMsg, variant: "destructive" })
         setIsUploading(false)
         return
       }

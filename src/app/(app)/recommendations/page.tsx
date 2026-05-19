@@ -8,7 +8,7 @@ import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { ProgressBar } from "@/components/common/ProgressBar"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
-import { useRecommendations, useRefreshRecommendations } from "@/hooks/useRecommendations"
+import { useRecommendations, useRecommendationsSummary, useRefreshRecommendations } from "@/hooks/useRecommendations"
 import { ACTION_LABELS } from "@/lib/constants"
 import { useToast } from "@/hooks/use-toast"
 
@@ -75,13 +75,14 @@ const AI_LOGIC_RULES = [
 export default function RecommendationsPage() {
   const { toast } = useToast()
   const { data: recoData, isLoading } = useRecommendations()
+  const { data: summary } = useRecommendationsSummary()
   const { mutate: refresh, isPending: isRefreshing } = useRefreshRecommendations()
 
   const realItems = recoData?.items ?? []
-  const totalActions = recoData?.total ?? MOCK_KPIS[0].value
+  const totalActions = summary?.total ?? recoData?.total ?? 0
 
   const kpis = [
-    { ...MOCK_KPIS[0], value: String(totalActions) },
+    { ...MOCK_KPIS[0], value: String(totalActions > 0 ? totalActions : MOCK_KPIS[0].value) },
     ...MOCK_KPIS.slice(1),
   ]
 

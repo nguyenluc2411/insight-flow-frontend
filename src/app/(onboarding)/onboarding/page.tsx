@@ -5,6 +5,7 @@ import { useOnboardingStore } from "@/stores/onboarding.store"
 import { useAuthStore } from "@/stores/auth.store"
 import { authService } from "@/services/auth.service"
 import { ROUTES, LOCATIONS, FASHION_CATEGORIES, BUSINESS_SCALES, PLATFORMS, APP_NAME } from "@/lib/constants"
+import { parseApiError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useState } from "react"
@@ -44,8 +45,7 @@ export default function OnboardingPage() {
       updateTenantSettings(settings)
       router.push(ROUTES.MARKET)
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      setError(detail ?? "Không thể lưu thông tin. Vui lòng thử lại.")
+      setError(parseApiError(err, "Không thể lưu thông tin. Vui lòng thử lại."))
     } finally {
       setIsLoading(false)
     }

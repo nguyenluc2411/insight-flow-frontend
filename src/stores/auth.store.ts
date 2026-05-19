@@ -18,6 +18,17 @@ interface AuthState {
   updateTenantSettings: (settings: Record<string, unknown>) => void
 }
 
+function setCookie(name: string, value: string, days = 7) {
+  if (typeof document === "undefined") return
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${value}; path=/; expires=${expires}; SameSite=Lax`
+}
+
+function clearCookie(name: string) {
+  if (typeof document === "undefined") return
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -29,7 +40,6 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       setAuth: (data: AuthResponse) => {
-        // Build tenant from response or from user fields when login doesn't return tenant
         const tenant: Tenant = data.tenant ?? {
           id: data.user.tenantId,
           name: data.user.tenantSlug,
@@ -43,10 +53,19 @@ export const useAuthStore = create<AuthState>()(
           refreshTokenValue: data.refreshToken,
           isAuthenticated: true,
         })
+        setCookie("access_token", data.accessToken)
+        if (data.user.profileComplete) {
+          setCookie("profile_complete", "true", 365)
+        }
       },
 
       setUser: (user: User) => {
         set({ user })
+        if (user.profileComplete) {
+          setCookie("profile_complete", "true", 365)
+        } else {
+          clearCookie("profile_complete")
+        }
       },
 
       login: async (tenantSlug, email, password) => {
@@ -56,9 +75,13 @@ export const useAuthStore = create<AuthState>()(
             tenantSlug, email, password,
           })
           get().setAuth(data)
-          // Fetch full user profile (includes profileComplete) after auth token is set
-          const { data: fullUser } = await api.get<User>("/api/v1/auth/me")
-          set({ user: fullUser })
+          // Best-effort: fetch profileComplete to set cookie; failure is non-fatal
+          try {
+            const { data: fullUser } = await api.get<User>("/api/v1/auth/me")
+            get().setUser(fullUser)
+          } catch {
+            // AppLayout will call me() again and handle routing
+          }
         } finally {
           set({ isLoading: false })
         }
@@ -66,6 +89,8 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ user: null, tenant: null, accessToken: null, refreshTokenValue: null, isAuthenticated: false })
+        clearCookie("access_token")
+        clearCookie("profile_complete")
       },
 
       refreshToken: async () => {
@@ -74,6 +99,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: currentRefreshToken,
         })
         set({ accessToken: data.accessToken, refreshTokenValue: data.refreshToken ?? currentRefreshToken })
+        setCookie("access_token", data.accessToken)
       },
 
       updateTenantSettings: (settings) => {

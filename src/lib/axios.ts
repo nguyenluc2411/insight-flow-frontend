@@ -17,7 +17,9 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    if (error.response?.status === 401 && !original._retry) {
+    // Never retry auth endpoints themselves — wrong credentials should propagate as-is
+    const isAuthEndpoint = /\/auth\/(login|register-tenant|refresh)/.test(original?.url ?? "")
+    if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true
       try {
         await useAuthStore.getState().refreshToken()
