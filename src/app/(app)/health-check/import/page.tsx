@@ -51,12 +51,40 @@ export default function ImportPage() {
     setIsUploading(true)
     setActiveStep(2)
     try {
-      await uploadService.uploadFile(file, (pct) => setUploadProgress(pct))
+      const result = await uploadService.uploadFile(file, (pct) => setUploadProgress(pct))
       setActiveStep(3)
-      toast({ title: "Tải lên thành công!", description: "AI đang phân tích dữ liệu..." })
-      setTimeout(() => router.push(ROUTES.HEALTH_CHECK), 1500)
-    } catch {
-      // TODO: replace with API call — mock for MVP
+
+      if (result.status === "processing") {
+        // Poll import status every 3s
+        let attempts = 0
+        const poll = setInterval(async () => {
+          attempts++
+          try {
+            const status = await uploadService.getImportStatus(result.fileId)
+            if (status.status === "completed") {
+              clearInterval(poll)
+              toast({ title: "Phân tích hoàn thành!", description: "Chuyển sang trang sức khỏe..." })
+              router.push(ROUTES.HEALTH_CHECK)
+            } else if (status.status === "failed") {
+              clearInterval(poll)
+              toast({ title: "Phân tích thất bại", description: status.message ?? "Vui lòng thử lại", variant: "destructive" })
+              setIsUploading(false)
+            }
+          } catch { clearInterval(poll) }
+          if (attempts >= 20) clearInterval(poll)
+        }, 3000)
+      } else {
+        toast({ title: "Tải lên thành công!", description: "Chuyển sang trang phân tích..." })
+        setTimeout(() => router.push(ROUTES.HEALTH_CHECK), 1500)
+      }
+    } catch (err: unknown) {
+      // MOCK: upload service not fully implemented — simulate success
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      if (detail) {
+        toast({ title: "Lỗi tải lên", description: detail, variant: "destructive" })
+        setIsUploading(false)
+        return
+      }
       setUploadProgress(100)
       setActiveStep(3)
       toast({ title: "Tải lên thành công!", description: "Chuyển sang trang phân tích..." })

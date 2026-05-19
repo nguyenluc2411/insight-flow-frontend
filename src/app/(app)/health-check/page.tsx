@@ -1,3 +1,5 @@
+"use client"
+
 import { KPIGrid } from "@/components/health-check/KPIGrid"
 import { CategoryRiskChart } from "@/components/health-check/CategoryRiskChart"
 import { ChannelPerformance } from "@/components/health-check/ChannelPerformance"
@@ -7,9 +9,10 @@ import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { StatusBadge } from "@/components/common/StatusBadge"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
+import { useHealthCheck } from "@/hooks/useHealthCheck"
 
-// TODO: replace with API calls
-const MOCK_KPIS = [
+// MOCK: inventory metrics endpoints not available — using catalog products count for totalSKU
+const MOCK_KPIS_BASE = [
   { label: "Áp lực tồn kho", value: "45%", subtitle: "450 / 1,000 đơn vị", trend: "+5%", trendType: "down" as const },
   { label: "Tỷ lệ sell-through", value: "41%", subtitle: "thấp hơn 15% so với ngành", trend: "-15%", trendType: "down" as const },
   { label: "SKU chậm bán", value: "32%", subtitle: "32 / 100 SKU cần xử lý", trend: "12 nghiêm trọng", trendType: "down" as const },
@@ -66,6 +69,14 @@ const AI_INSIGHTS = [
 ]
 
 export default function HealthCheckPage() {
+  const { data: healthData, isLoading } = useHealthCheck()
+
+  const kpis = MOCK_KPIS_BASE.map((kpi, i) =>
+    i === 2
+      ? { ...kpi, subtitle: `${healthData?.totalSKU ?? 32} / ${healthData?.totalProducts ?? 100} SKU cần xử lý` }
+      : kpi
+  )
+
   return (
     <div>
       {/* Header */}
@@ -80,16 +91,13 @@ export default function HealthCheckPage() {
           </h1>
         </div>
         <div className="text-right text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
-          <p>File: <span className="font-semibold">sales_data_q1_2026.xlsx</span></p>
-          <p>Ngày: <span className="font-semibold">15/04/2026</span></p>
-          <p>SKU: <span className="font-semibold">100</span> | Kênh: <span className="font-semibold">3</span> | Khu vực: <span className="font-semibold">TP.HCM</span></p>
-          <p>Tổng đơn vị: <span className="font-semibold">1,000</span></p>
+          <p>SKU: <span className="font-semibold">{isLoading ? "..." : (healthData?.totalSKU ?? 0)}</span></p>
         </div>
       </div>
 
       {/* KPI Grid */}
       <div className="mb-8">
-        <KPIGrid data={MOCK_KPIS} />
+        <KPIGrid data={kpis} />
       </div>
 
       {/* Main Content */}
