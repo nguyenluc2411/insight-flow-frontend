@@ -7,6 +7,7 @@ import { RiskBadge } from "@/components/common/RiskBadge"
 import { TrendIndicator } from "@/components/common/TrendIndicator"
 import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { useForecastSummary } from "@/hooks/useForecast"
+import { useCategories } from "@/hooks/useCatalog"
 
 const MOCK_AVOID_PRODUCTS = [
   { sku: "SKU-008", name: "Áo Blazer Formal", category: "Tops", reason: "Thị trường bão hòa, -22% demand", risk: "HIGH" as const },
@@ -31,10 +32,16 @@ const CONFIDENCE_VALUE: Record<string, number> = { HIGH: 90, MEDIUM: 70, LOW: 50
 
 export default function ForecastPage() {
   const { data: forecast, isLoading } = useForecastSummary()
+  const { data: categories } = useCategories()
 
   const categoryTrends = forecast?.categoryTrends ?? []
   const topProducts = forecast?.topProducts ?? []
   const confidence = Math.round((forecast?.overallConfidence ?? 0) * 100)
+
+  // Map categoryId → name for enriching BFF data
+  const categoryNameMap = Object.fromEntries(
+    (categories ?? []).map((c) => [c.id, c.name])
+  )
 
   const kpis = [
     {
@@ -103,7 +110,9 @@ export default function ForecastPage() {
             {categoryTrends.map((cat) => (
               <div key={cat.category} className="flex flex-wrap items-center gap-4">
                 <div className="flex-1 min-w-[160px]">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{cat.category}</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {categoryNameMap[cat.category] ?? cat.category}
+                  </p>
                 </div>
                 <TrendIndicator value={cat.pct} />
                 <ConfidenceBadge value={75} />

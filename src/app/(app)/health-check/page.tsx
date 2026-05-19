@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/common/StatusBadge"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
 import { useHealthCheck } from "@/hooks/useHealthCheck"
+import { useInventorySummary, useCategories } from "@/hooks/useCatalog"
 
 const MOCK_RISK_ITEMS = [
   { sku: "SKU-001", name: "Quần Wide Leg Trousers Đen", stock: 420, sellThrough: 18, risk: "HIGH" as const },
@@ -49,41 +50,51 @@ const AI_INSIGHTS = [
 
 export default function HealthCheckPage() {
   const { data: health, isLoading } = useHealthCheck()
+  const { data: invSummary, isLoading: invLoading } = useInventorySummary()
+  const { data: categories } = useCategories()
 
+  const loading = isLoading || invLoading
   const pressurePct = health?.inventoryPressurePct ?? 0
   const sellThrough = health?.sellThroughRate ?? 0
   const slowSKU = health?.slowMovingSKUCount ?? 0
+  const totalSKU = invSummary?.totalSKU ?? 0
+  const totalQty = invSummary?.totalQuantity ?? 0
+  const lowStock = invSummary?.lowStockCount ?? 0
 
   const kpis = [
     {
+      label: "Tổng SKU",
+      value: loading ? "..." : String(totalSKU),
+      subtitle: `${totalQty.toLocaleString("vi-VN")} đơn vị tồn kho`,
+      trendType: "neutral" as const,
+    },
+    {
       label: "Áp lực tồn kho",
-      value: isLoading ? "..." : `${pressurePct.toFixed(0)}%`,
+      value: loading ? "..." : `${pressurePct.toFixed(0)}%`,
       subtitle: "tỷ lệ tồn kho so với capacity",
       trendType: pressurePct > 60 ? ("down" as const) : ("neutral" as const),
     },
     {
+      label: "SKU thiếu hàng",
+      value: loading ? "..." : String(lowStock),
+      subtitle: `${slowSKU} SKU chậm bán cần xử lý`,
+      trendType: lowStock > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
       label: "Tỷ lệ sell-through",
-      value: isLoading ? "..." : `${sellThrough.toFixed(0)}%`,
-      subtitle: "thấp hơn benchmark ngành",
-      trendType: sellThrough < 40 ? ("down" as const) : ("up" as const),
-    },
-    {
-      label: "SKU chậm bán",
-      value: isLoading ? "..." : String(slowSKU),
-      subtitle: "SKU cần xử lý",
-      trendType: slowSKU > 0 ? ("down" as const) : ("neutral" as const),
-    },
-    {
-      label: "Rủi ro kênh bán",
-      value: isLoading ? "..." : (health?.channelPerformance?.[0]?.channel ?? "—"),
-      subtitle: "kênh chiếm tỷ trọng cao nhất",
-      trendType: "neutral" as const,
+      value: loading ? "..." : (sellThrough > 0 ? `${sellThrough.toFixed(0)}%` : "—"),
+      subtitle: "từ BFF · cần dữ liệu bán hàng",
+      trendType: sellThrough > 0 && sellThrough < 40 ? ("down" as const) : ("neutral" as const),
     },
   ]
 
-  // Map BFF CategoryRisk → chart format
+  // Prefer BFF categoryRisks if available; enrich names with catalog categories
+  const categoryNameMap = Object.fromEntries(
+    (categories ?? []).map((c) => [c.id, c.name])
+  )
+
   const categoryChartData = (health?.categoryRisks ?? []).map((c) => ({
-    name: c.category,
+    name: categoryNameMap[c.category] ?? c.category,
     value: c.units,
     total: Math.max(c.units * 2, 100),
   }))
@@ -109,7 +120,8 @@ export default function HealthCheckPage() {
           </h1>
         </div>
         <div className="text-right text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
-          <p>SKU chậm bán: <span className="font-semibold">{isLoading ? "..." : slowSKU}</span></p>
+          <p>Tổng SKU: <span className="font-semibold">{loading ? "..." : totalSKU}</span></p>
+          <p>Thiếu hàng: <span className="font-semibold text-amber-500">{loading ? "..." : lowStock}</span></p>
           {health?.lastUpdated && (
             <p>Cập nhật: {new Date(health.lastUpdated).toLocaleTimeString("vi-VN")}</p>
           )}

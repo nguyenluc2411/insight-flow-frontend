@@ -81,6 +81,20 @@ export interface RecordMovementRequest {
   notes?: string
 }
 
+/** Matches InventorySummaryResponse from catalog-service */
+export interface InventorySummary {
+  totalSKU: number
+  totalQuantity: number
+  lowStockCount: number
+}
+
+/** Matches CategorySummaryItem from catalog-service */
+export interface CategorySummary {
+  id: string
+  name: string
+  productCount: number
+}
+
 export const catalogService = {
   async getProducts(params?: { page?: number; size?: number; search?: string }): Promise<SpringPage<Product>> {
     const { data } = await api.get("/api/v1/catalog/products", { params })
@@ -110,6 +124,21 @@ export const catalogService = {
 
   async getLocations() {
     const { data } = await api.get("/api/v1/catalog/locations")
+    return data
+  },
+
+  async getProductVariants(productId: string): Promise<ProductVariant[]> {
+    const { data } = await api.get(`/api/v1/catalog/products/${productId}/variants`)
+    return data
+  },
+
+  async getInventorySummary(): Promise<InventorySummary> {
+    const { data } = await api.get("/api/v1/catalog/inventory/summary")
+    return data
+  },
+
+  async getCategories(): Promise<CategorySummary[]> {
+    const { data } = await api.get("/api/v1/catalog/categories")
     return data
   },
 }
