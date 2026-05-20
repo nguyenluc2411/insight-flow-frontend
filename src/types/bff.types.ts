@@ -67,6 +67,7 @@ export interface EstimatedImpact {
   clearanceItems: number
   restockItems: number
   promoteItems: number
+  avgDiscountPct?: number
 }
 
 export interface RecommendationsSummaryResponse {

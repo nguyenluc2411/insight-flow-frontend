@@ -95,6 +95,51 @@ export interface CategorySummary {
   productCount: number
 }
 
+export interface CreateProductRequest {
+  skuRoot?: string
+  name?: string
+  description?: string
+  categoryId?: string
+  brand?: string
+  season?: string
+  gender?: string
+  tags?: string[]
+}
+
+export interface UpdateProductRequest {
+  name?: string
+  description?: string
+  categoryId?: string
+  brand?: string
+  season?: string
+  gender?: string
+  tags?: string[]
+  status?: string
+}
+
+export interface CreateVariantRequest {
+  sku?: string
+  barcode?: string
+  size?: string
+  color?: string
+  colorHex?: string
+  costPrice?: number
+  sellingPrice: number
+  compareAtPrice?: number
+  status?: string
+}
+
+export interface LocationResponse {
+  id: string
+  tenantId: string
+  name: string
+  type: string
+  address?: string
+  city?: string
+  active: boolean
+  createdAt: string
+}
+
 export const catalogService = {
   async getProducts(params?: { page?: number; size?: number; search?: string }): Promise<SpringPage<Product>> {
     const { data } = await api.get("/api/v1/catalog/products", { params })
@@ -103,6 +148,30 @@ export const catalogService = {
 
   async getProduct(id: string): Promise<Product> {
     const { data } = await api.get(`/api/v1/catalog/products/${id}`)
+    return data
+  },
+
+  async createProduct(payload: CreateProductRequest): Promise<Product> {
+    const { data } = await api.post("/api/v1/catalog/products", payload)
+    return data
+  },
+
+  async updateProduct(id: string, payload: UpdateProductRequest): Promise<Product> {
+    const { data } = await api.put(`/api/v1/catalog/products/${id}`, payload)
+    return data
+  },
+
+  async deleteProduct(id: string): Promise<void> {
+    await api.delete(`/api/v1/catalog/products/${id}`)
+  },
+
+  async createVariant(productId: string, payload: CreateVariantRequest): Promise<ProductVariant> {
+    const { data } = await api.post(`/api/v1/catalog/products/${productId}/variants`, payload)
+    return data
+  },
+
+  async createLocation(payload: { name?: string; type: string; address?: string; city?: string }): Promise<LocationResponse> {
+    const { data } = await api.post("/api/v1/catalog/locations", payload)
     return data
   },
 
@@ -122,7 +191,7 @@ export const catalogService = {
     return data
   },
 
-  async getLocations() {
+  async getLocations(): Promise<LocationResponse[]> {
     const { data } = await api.get("/api/v1/catalog/locations")
     return data
   },

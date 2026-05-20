@@ -4,34 +4,41 @@ import { KPICard } from "@/components/common/KPICard"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
 import { useDashboard } from "@/hooks/useDashboard"
+import { useInventorySummary } from "@/hooks/useCatalog"
 import { useAuthStore } from "@/stores/auth.store"
 
 export default function DashboardPage() {
-  const { data: overview, isLoading } = useDashboard()
+  const { data: overview, isLoading: bffLoading } = useDashboard()
+  const { data: invSummary, isLoading: invLoading } = useInventorySummary()
   const user = useAuthStore((s) => s.user)
   const tenant = useAuthStore((s) => s.tenant)
 
+  const isLoading = bffLoading || invLoading
+
+  // BFF may be DOWN — fallback to catalog inventory for totalSKU
+  const totalSKU = overview?.totalSKU ?? invSummary?.totalSKU ?? 0
+  const lowStockCount = invSummary?.lowStockCount ?? 0
   const mlOnline = overview?.mlStatus === "UP"
-  const hasData = (overview?.totalSKU ?? 0) > 0
+  const hasData = totalSKU > 0
 
   const kpis = [
     {
       label: "Tổng SKU",
-      value: isLoading ? "..." : String(overview?.totalSKU ?? 0),
+      value: isLoading ? "..." : String(totalSKU),
       subtitle: "sản phẩm đang theo dõi",
       trendType: "neutral" as const,
     },
     {
-      label: "Cảnh báo",
+      label: "Thiếu hàng",
+      value: isLoading ? "..." : String(lowStockCount),
+      subtitle: "SKU dưới ngưỡng reorder",
+      trendType: lowStockCount > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "Cảnh báo AI",
       value: isLoading ? "..." : String(overview?.highPriorityAlerts ?? 0),
       subtitle: "ưu tiên cao cần xử lý",
       trendType: (overview?.highPriorityAlerts ?? 0) > 0 ? ("down" as const) : ("neutral" as const),
-    },
-    {
-      label: "ML Service",
-      value: isLoading ? "..." : (mlOnline ? "Online" : "Offline"),
-      subtitle: "trạng thái dịch vụ AI",
-      trendType: mlOnline ? ("up" as const) : ("neutral" as const),
     },
     {
       label: "Gói dịch vụ",

@@ -223,12 +223,12 @@ export default function RecommendationsPage() {
                 {realItems.length > 0
                   ? realItems.map((row) => (
                       <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.sku ?? row.variantId.slice(0,8)}</td>
-                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{row.category ?? "—"}</td>
+                        <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.variantId.slice(0, 8)}</td>
+                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">—</td>
                         <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{ACTION_LABELS[row.action] ?? row.action}</td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 text-xs max-w-[200px] truncate">{row.reason}</td>
+                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 text-xs max-w-[200px] truncate">{row.reason ?? "—"}</td>
                         <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
-                        <td className="py-3"><ConfidenceBadge value={Math.round((row.confidence ?? 0) * 100)} /></td>
+                        <td className="py-3"><ConfidenceBadge value={0} /></td>
                       </tr>
                     ))
                   : MOCK_DETAIL_TABLE.map((row) => (

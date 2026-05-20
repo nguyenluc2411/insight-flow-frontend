@@ -2,10 +2,14 @@
 
 import { useState } from "react"
 import { useAuthStore } from "@/stores/auth.store"
+import { authService } from "@/services/auth.service"
+import { useToast } from "@/hooks/use-toast"
+import { parseApiError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
 export default function ProfilePage() {
-  const { user, tenant } = useAuthStore()
+  const { user, tenant, setUser } = useAuthStore()
+  const { toast } = useToast()
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -19,10 +23,22 @@ export default function ProfilePage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setIsSaving(true)
-    await new Promise((r) => setTimeout(r, 800)) // TODO: call authService.updateProfile()
-    setSaved(true)
-    setIsSaving(false)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      const updatedUser = await authService.updateProfile({
+        location: user?.location,
+        categories: user?.categories,
+        businessScale: user?.businessScale,
+        platforms: user?.platforms,
+        profileComplete: user?.profileComplete,
+      })
+      setUser(updatedUser)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err: unknown) {
+      toast({ title: "Lỗi lưu thông tin", description: parseApiError(err, "Không thể lưu thông tin"), variant: "destructive" })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const inputClass =

@@ -10,12 +10,12 @@ export const authService = {
     const { data } = await api.post("/api/v1/auth/register-tenant", req)
     return data
   },
-  async refresh(): Promise<AuthResponse> {
-    const { data } = await api.post("/api/v1/auth/refresh")
+  async refresh(refreshToken: string): Promise<AuthResponse> {
+    const { data } = await api.post("/api/v1/auth/refresh", { refreshToken })
     return data
   },
-  async logout(): Promise<void> {
-    await api.post("/api/v1/auth/logout")
+  async logout(refreshToken: string): Promise<void> {
+    await api.post("/api/v1/auth/logout", { refreshToken })
   },
   async me(): Promise<User> {
     const { data } = await api.get("/api/v1/auth/me")

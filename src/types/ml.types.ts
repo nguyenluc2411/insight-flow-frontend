@@ -1,3 +1,4 @@
+/** Matches ML service ForecastPoint schema */
 export interface ForecastPoint {
   date: string
   predicted: number
@@ -5,6 +6,7 @@ export interface ForecastPoint {
   upperBound: number
 }
 
+/** Matches ML service ForecastResponse schema */
 export interface ForecastResponse {
   variantId: string
   tenantId: string
@@ -15,29 +17,32 @@ export interface ForecastResponse {
   generatedAt: string
 }
 
+/** Matches ML service RecommendationResponse schema */
 export interface Recommendation {
   id: string
+  tenantId: string
   variantId: string
-  variantName?: string
-  sku?: string
-  category?: string
   action: "CLEARANCE" | "RESTOCK" | "PROMOTE" | "OK"
-  reason: string
+  reason?: string
   priority: "HIGH" | "MEDIUM" | "LOW"
   suggestedDiscountPct?: number
   suggestedRestockQty?: number
-  stockAgeDays: number
-  currentStock: number
-  salesVelocity30d: number
-  confidence?: number
-  expectedImpact?: string
+  stockAgeDays?: number
+  currentStock?: number
+  salesVelocity30d?: number
   createdAt: string
 }
 
-export interface RecommendationSummary {
+/** Matches ML service PagedRecommendationResponse schema */
+export interface PagedRecommendationResponse {
+  items: Recommendation[]
+  page: number
+  size: number
   total: number
-  byAction: Record<string, number>
-  estimatedBacklogReduction: number
-  estimatedSellThroughIncrease: number
-  estimatedMarkdownRiskReduction: number
+}
+
+/** Matches ML service RefreshJobResponse schema */
+export interface RefreshJobResponse {
+  jobId: string
+  status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED"
 }

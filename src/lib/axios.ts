@@ -17,7 +17,6 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    // Never retry auth endpoints themselves — wrong credentials should propagate as-is
     const isAuthEndpoint = /\/auth\/(login|register-tenant|refresh)/.test(original?.url ?? "")
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true
@@ -28,24 +27,11 @@ api.interceptors.response.use(
         return api(original)
       } catch {
         useAuthStore.getState().logout()
-        window.location.href = "/login"
+        if (typeof window !== "undefined") window.location.href = "/login"
       }
     }
     return Promise.reject(error)
   }
 )
-
-export const mlApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_ML_URL || "http://localhost:8000",
-  headers: { "Content-Type": "application/json" },
-  timeout: 30000,
-})
-
-mlApi.interceptors.request.use((config) => {
-  const { accessToken, tenant } = useAuthStore.getState()
-  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
-  if (tenant?.id) config.headers["X-Tenant-Id"] = tenant.id
-  return config
-})
 
 export default api

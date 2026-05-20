@@ -88,6 +88,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        const currentRefresh = useAuthStore.getState().refreshTokenValue
+        if (currentRefresh) {
+          api.post("/api/v1/auth/logout", { refreshToken: currentRefresh }).catch(() => {})
+        }
         set({ user: null, tenant: null, accessToken: null, refreshTokenValue: null, isAuthenticated: false })
         clearCookie("access_token")
         clearCookie("profile_complete")

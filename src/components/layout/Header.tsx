@@ -6,7 +6,6 @@ import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, APP_NAME, ROUTES } from "@/lib/constants"
 import { useAuthStore } from "@/stores/auth.store"
-import { authService } from "@/services/auth.service"
 
 export function Header() {
   const pathname = usePathname()
@@ -27,8 +26,7 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  async function handleLogout() {
-    try { await authService.logout() } catch { /* ignore */ }
+  function handleLogout() {
     logout()
     router.push(ROUTES.LOGIN)
   }
