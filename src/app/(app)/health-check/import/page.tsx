@@ -79,17 +79,14 @@ export default function ImportPage() {
         setTimeout(() => router.push(ROUTES.HEALTH_CHECK), 1500)
       }
     } catch (err: unknown) {
-      // MOCK: upload service not fully implemented — simulate success
-      const errMsg = parseApiError(err, "")
-      if (errMsg) {
-        toast({ title: "Lỗi tải lên", description: errMsg, variant: "destructive" })
-        setIsUploading(false)
-        return
-      }
-      setUploadProgress(100)
-      setActiveStep(3)
-      toast({ title: "Tải lên thành công!", description: "Chuyển sang trang phân tích..." })
-      setTimeout(() => router.push(ROUTES.HEALTH_CHECK), 1500)
+      // Always surface upload failures — never fake success.
+      toast({
+        title: "Lỗi tải lên",
+        description: parseApiError(err, "Không thể tải lên dữ liệu. Vui lòng thử lại."),
+        variant: "destructive",
+      })
+      setActiveStep(1)
+      setUploadProgress(0)
     } finally {
       setIsUploading(false)
     }
