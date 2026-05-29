@@ -4,6 +4,7 @@ import { TrendIndicator } from "@/components/common/TrendIndicator"
 import { ProgressBar } from "@/components/common/ProgressBar"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
+import { FeatureGate } from "@/components/feature/FeatureGate"
 
 // TODO: replace with API calls
 const MOCK_KPIS = [
@@ -62,6 +63,14 @@ const MOCK_TRENDS = [
 ]
 
 export default function MarketPage() {
+  return (
+    <FeatureGate featureCode="SALES_ANALYTICS">
+      <MarketPageContent />
+    </FeatureGate>
+  )
+}
+
+function MarketPageContent() {
   return (
     <div>
       {/* Header */}

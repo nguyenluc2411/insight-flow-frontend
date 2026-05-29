@@ -20,8 +20,9 @@ export const ROUTES = {
   SETTINGS_BILLING: "/settings/billing",
 }
 
-// featureRequired gates the item by the tenant's plan entitlements (see useEntitlements).
-// Items without it are always visible (Dashboard, Health Check available on every plan).
+// featureRequired marks which plan entitlement unlocks the item (see useEntitlements).
+// All items stay VISIBLE; locked ones show a lock badge and a locked page with an
+// upgrade CTA (MVP: discoverability + upsell, not hidden).
 export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequired?: string }[] = [
   { label: "Trang chủ", href: ROUTES.DASHBOARD, icon: "home" },
   { label: "Cơ hội thị trường", href: ROUTES.MARKET, icon: "trending_up", featureRequired: "SALES_ANALYTICS" },
@@ -29,6 +30,43 @@ export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequ
   { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights", featureRequired: "DEMAND_FORECAST" },
   { label: "Đề xuất", href: ROUTES.RECOMMENDATIONS, icon: "recommend", featureRequired: "INVENTORY_RECOMMEND" },
 ]
+
+// Feature metadata shown on locked pages (title + what the feature does + which plan unlocks it).
+export const FEATURE_META: Record<string, { label: string; description: string; unlockPlan: string }> = {
+  DEMAND_FORECAST: {
+    label: "Dự báo nhu cầu AI",
+    description:
+      "Dự báo số lượng bán theo từng SKU trong 30 ngày tới dựa trên lịch sử bán hàng, giúp nhập đúng lượng và tránh tồn kho chết.",
+    unlockPlan: "Advanced",
+  },
+  INVENTORY_RECOMMEND: {
+    label: "Đề xuất xử lý tồn kho",
+    description:
+      "Gợi ý hành động cho từng SKU — nhập thêm, thanh lý, đẩy bán — được ưu tiên theo mức độ ảnh hưởng tới doanh thu.",
+    unlockPlan: "Advanced",
+  },
+  SALES_ANALYTICS: {
+    label: "Phân tích bán hàng & Cơ hội thị trường",
+    description:
+      "Phân tích doanh số theo sản phẩm, kênh và thời gian; phát hiện xu hướng và cơ hội thị trường cho shop của bạn.",
+    unlockPlan: "Basic",
+  },
+  EXPORT_REPORTS: {
+    label: "Xuất báo cáo",
+    description: "Xuất báo cáo doanh số và tồn kho ra Excel/PDF để chia sẻ và lưu trữ.",
+    unlockPlan: "Advanced",
+  },
+  MULTI_LOCATION: {
+    label: "Nhiều chi nhánh",
+    description: "Quản lý tồn kho và bán hàng cho nhiều cửa hàng/chi nhánh trong một tài khoản.",
+    unlockPlan: "Advanced",
+  },
+  API_ACCESS: {
+    label: "Truy cập API",
+    description: "Tích hợp dữ liệu Insight Flow vào hệ thống của bạn qua API.",
+    unlockPlan: "Pro",
+  },
+}
 
 export const RISK_LABELS: Record<string, string> = {
   HIGH: "Rủi ro cao",

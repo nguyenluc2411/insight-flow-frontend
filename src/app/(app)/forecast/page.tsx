@@ -8,6 +8,7 @@ import { TrendIndicator } from "@/components/common/TrendIndicator"
 import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { useForecastSummary } from "@/hooks/useForecast"
 import { useCategories } from "@/hooks/useCatalog"
+import { FeatureGate } from "@/components/feature/FeatureGate"
 
 const MOCK_AVOID_PRODUCTS = [
   { sku: "SKU-008", name: "Áo Blazer Formal", category: "Tops", reason: "Thị trường bão hòa, -22% demand", risk: "HIGH" as const },
@@ -31,6 +32,14 @@ const TREND_COLOR = {
 const CONFIDENCE_VALUE: Record<string, number> = { HIGH: 90, MEDIUM: 70, LOW: 50 }
 
 export default function ForecastPage() {
+  return (
+    <FeatureGate featureCode="DEMAND_FORECAST">
+      <ForecastPageContent />
+    </FeatureGate>
+  )
+}
+
+function ForecastPageContent() {
   const { data: forecast, isLoading } = useForecastSummary()
   const { data: categories } = useCategories()
 

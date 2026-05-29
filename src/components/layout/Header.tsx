@@ -16,9 +16,11 @@ export function Header() {
   const [avatarOpen, setAvatarOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
   const { user, tenant, logout } = useAuthStore()
-  const { hasFeature } = useEntitlements()
+  const { hasFeature, loaded } = useEntitlements()
 
-  const navItems = NAV_ITEMS.filter((item) => !item.featureRequired || hasFeature(item.featureRequired))
+  // Show ALL items; mark the ones the plan doesn't include as locked.
+  const isLocked = (featureRequired?: string) =>
+    loaded && !!featureRequired && !hasFeature(featureRequired)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -51,8 +53,9 @@ export function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
+            {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+              const locked = isLocked(item.featureRequired)
               return (
                 <Link
                   key={item.href}
@@ -61,11 +64,15 @@ export function Header() {
                     "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                     isActive
                       ? "text-primary border-b-2 border-primary bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-400"
-                      : "text-slate-600 hover:text-primary hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                      : "text-slate-600 hover:text-primary hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800",
+                    locked && "opacity-70"
                   )}
                 >
                   <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                   {item.label}
+                  {locked && (
+                    <span className="material-symbols-outlined text-[14px] text-amber-500">lock</span>
+                  )}
                 </Link>
               )
             })}
@@ -136,8 +143,9 @@ export function Header() {
       {mobileOpen && (
         <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
-            {navItems.map((item) => {
+            {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+              const locked = isLocked(item.featureRequired)
               return (
                 <Link
                   key={item.href}
@@ -147,11 +155,15 @@ export function Header() {
                     "flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
                     isActive
                       ? "text-primary bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-400"
-                      : "text-slate-600 hover:text-primary hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                      : "text-slate-600 hover:text-primary hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800",
+                    locked && "opacity-70"
                   )}
                 >
                   <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                   {item.label}
+                  {locked && (
+                    <span className="material-symbols-outlined text-[14px] text-amber-500 ml-auto">lock</span>
+                  )}
                 </Link>
               )
             })}

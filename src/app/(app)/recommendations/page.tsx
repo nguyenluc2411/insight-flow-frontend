@@ -10,6 +10,7 @@ import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
 import { useRecommendations, useRecommendationsSummary, useRefreshRecommendations } from "@/hooks/useRecommendations"
 import { ACTION_LABELS } from "@/lib/constants"
+import { FeatureGate } from "@/components/feature/FeatureGate"
 import { useToast } from "@/hooks/use-toast"
 
 // MOCK: displayed when ML service returns no data yet
@@ -73,6 +74,14 @@ const AI_LOGIC_RULES = [
 ]
 
 export default function RecommendationsPage() {
+  return (
+    <FeatureGate featureCode="INVENTORY_RECOMMEND">
+      <RecommendationsPageContent />
+    </FeatureGate>
+  )
+}
+
+function RecommendationsPageContent() {
   const { toast } = useToast()
   const { data: recoData, isLoading } = useRecommendations()
   const { data: summary } = useRecommendationsSummary()
