@@ -3,18 +3,27 @@
 import { useState } from "react"
 import Link from "next/link"
 import { APP_NAME, ROUTES } from "@/lib/constants"
+import { authService } from "@/services/auth.service"
+import { parseApiError } from "@/lib/errors"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [sent, setSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 1000)) // TODO: call authService.forgotPassword()
-    setSent(true)
-    setIsLoading(false)
+    setError("")
+    try {
+      await authService.forgotPassword(email)
+      setSent(true)
+    } catch (err: unknown) {
+      setError(parseApiError(err, "Không thể gửi email. Vui lòng thử lại."))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -61,6 +70,12 @@ export default function ForgotPasswordPage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
               />
             </div>
+
+            {error && (
+              <p className="text-xs text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"

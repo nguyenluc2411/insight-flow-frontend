@@ -17,7 +17,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    const isAuthEndpoint = /\/auth\/(login|register-tenant|refresh)/.test(original?.url ?? "")
+    const isAuthEndpoint = /\/auth\/(login|register-tenant|refresh|forgot-password|reset-password)/.test(original?.url ?? "")
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true
       try {
