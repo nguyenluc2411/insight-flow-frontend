@@ -20,12 +20,6 @@ const FEATURE_LABELS: Record<string, string> = {
   SAPO_INTEGRATION: "Tích hợp Sapo",
 }
 
-const PACKAGE_ACCENT: Record<string, string> = {
-  TRIAL: "slate",
-  STARTER: "indigo",
-  PRO: "violet",
-}
-
 function formatVnd(price: number): string {
   if (price === 0) return "Miễn phí"
   return new Intl.NumberFormat("vi-VN").format(price) + "đ"
@@ -115,7 +109,7 @@ export default function BillingPage() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Quản lý gói và thanh toán của bạn</p>
       </div>
 
-      <div className="max-w-4xl space-y-8">
+      <div className="space-y-6">
         {/* Current Plan Summary */}
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -179,7 +173,6 @@ export default function BillingPage() {
             .map((pkg) => {
             const isCurrent = currentPkgCode === pkg.code
             const plan = pickMonthlyPlan(pkg)
-            const accent = PACKAGE_ACCENT[pkg.code] ?? "slate"
             const highlight = pkg.code === "ADVANCED"
             const isUpgrading = upgradingCode === pkg.code
             return (
