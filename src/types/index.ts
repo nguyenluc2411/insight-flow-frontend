@@ -1,4 +1,5 @@
 export * from "./auth.types"
+export * from "./billing.types"
 export * from "./ml.types"
 export * from "./api.types"
 export * from "./bff.types"

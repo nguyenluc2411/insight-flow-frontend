@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { User, Tenant, AuthResponse } from "@/types/auth.types"
 import api from "@/lib/axios"
+import { clearEntitlementsCache } from "@/hooks/use-entitlements"
 
 interface AuthState {
   user: User | null
@@ -93,6 +94,7 @@ export const useAuthStore = create<AuthState>()(
           api.post("/api/v1/auth/logout", { refreshToken: currentRefresh }).catch(() => {})
         }
         set({ user: null, tenant: null, accessToken: null, refreshTokenValue: null, isAuthenticated: false })
+        clearEntitlementsCache()
         clearCookie("access_token")
         clearCookie("profile_complete")
       },

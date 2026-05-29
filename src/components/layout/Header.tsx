@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, APP_NAME, ROUTES } from "@/lib/constants"
 import { useAuthStore } from "@/stores/auth.store"
+import { useEntitlements } from "@/hooks/use-entitlements"
 
 export function Header() {
   const pathname = usePathname()
@@ -15,6 +16,9 @@ export function Header() {
   const [avatarOpen, setAvatarOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
   const { user, tenant, logout } = useAuthStore()
+  const { hasFeature } = useEntitlements()
+
+  const navItems = NAV_ITEMS.filter((item) => !item.featureRequired || hasFeature(item.featureRequired))
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -47,7 +51,7 @@ export function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
               return (
                 <Link
@@ -132,7 +136,7 @@ export function Header() {
       {mobileOpen && (
         <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
               return (
                 <Link

@@ -20,12 +20,14 @@ export const ROUTES = {
   SETTINGS_BILLING: "/settings/billing",
 }
 
-export const NAV_ITEMS = [
+// featureRequired gates the item by the tenant's plan entitlements (see useEntitlements).
+// Items without it are always visible (Dashboard, Health Check available on every plan).
+export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequired?: string }[] = [
   { label: "Trang chủ", href: ROUTES.DASHBOARD, icon: "home" },
-  { label: "Cơ hội thị trường", href: ROUTES.MARKET, icon: "trending_up" },
+  { label: "Cơ hội thị trường", href: ROUTES.MARKET, icon: "trending_up", featureRequired: "SALES_ANALYTICS" },
   { label: "Kiểm tra Sức khỏe", href: ROUTES.HEALTH_CHECK, icon: "monitor_heart" },
-  { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights" },
-  { label: "Đề xuất", href: ROUTES.RECOMMENDATIONS, icon: "recommend" },
+  { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights", featureRequired: "DEMAND_FORECAST" },
+  { label: "Đề xuất", href: ROUTES.RECOMMENDATIONS, icon: "recommend", featureRequired: "INVENTORY_RECOMMEND" },
 ]
 
 export const RISK_LABELS: Record<string, string> = {
