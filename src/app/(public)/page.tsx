@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ROUTES, APP_NAME, APP_FULL_NAME } from "@/lib/constants"
+import { LandingPricing } from "@/components/landing/LandingPricing"
 
 const PROBLEMS = [
   { icon: "inventory_2", title: "Tồn kho quá mức", desc: "Vốn bị chôn vùi trong hàng không bán được, phải markdown giảm giá mạnh cuối mùa" },
@@ -253,6 +254,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <LandingPricing />
+
       {/* Dark CTA */}
       <section className="py-16 px-4 bg-slate-900 dark:bg-slate-950">
         <div className="max-w-3xl mx-auto text-center">
@@ -260,7 +264,7 @@ export default function LandingPage() {
             Biến Kho hàng thành Hành động Sinh lời
           </h2>
           <p className="text-slate-400 mb-8">
-            Bắt đầu miễn phí 14 ngày. Không cần thẻ tín dụng. Không cần kỹ năng tech.
+            Bắt đầu miễn phí 30 ngày. Không cần thẻ tín dụng. Không cần kỹ năng tech.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
