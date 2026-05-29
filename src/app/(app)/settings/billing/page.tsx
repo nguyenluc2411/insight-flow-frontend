@@ -121,29 +121,39 @@ export default function BillingPage() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gói hiện tại</p>
-              <div className="flex items-center gap-3">
+              {currentPkgCode === "TRIAL" ? (
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
+                      Bản dùng thử
+                    </span>
+                    {subscription?.endDate && (
+                      <span className="text-sm text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px]">schedule</span>
+                        Còn đến {new Date(subscription.endDate).toLocaleDateString("vi-VN")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    Hết hạn dùng thử, tài khoản sẽ tự chuyển về bản miễn phí. Nâng cấp để giữ các tính năng nâng cao.
+                  </p>
+                </div>
+              ) : ["BASIC", "ADVANCED", "PRO"].includes(currentPkgCode) ? (
                 <span className={cn(
                   "inline-flex items-center px-3 py-1 rounded-full text-sm font-bold",
                   currentPkgCode === "PRO"
                     ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300"
-                    : currentPkgCode === "STARTER"
+                    : currentPkgCode === "ADVANCED"
                     ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                 )}>
                   {currentPkgCode}
                 </span>
-                {subscription?.status && (
-                  <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                    {subscription.status === "TRIAL" ? "Đang dùng thử" : subscription.status}
-                  </span>
-                )}
-                {subscription?.endDate && (
-                  <span className="text-sm text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">schedule</span>
-                    Hết hạn {new Date(subscription.endDate).toLocaleDateString("vi-VN")}
-                  </span>
-                )}
-              </div>
+              ) : (
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+                  Bạn đang dùng bản miễn phí — nâng cấp để mở khóa dự báo và đề xuất AI.
+                </p>
+              )}
             </div>
           </div>
 
@@ -162,13 +172,15 @@ export default function BillingPage() {
           )}
         </div>
 
-        {/* Plan Cards */}
+        {/* Plan Cards — only marketed plans; Free/Trial are not selectable plans */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {packages.map((pkg) => {
+          {packages
+            .filter((pkg) => !["FREE", "TRIAL"].includes(pkg.code))
+            .map((pkg) => {
             const isCurrent = currentPkgCode === pkg.code
             const plan = pickMonthlyPlan(pkg)
             const accent = PACKAGE_ACCENT[pkg.code] ?? "slate"
-            const highlight = pkg.code === "STARTER"
+            const highlight = pkg.code === "ADVANCED"
             const isUpgrading = upgradingCode === pkg.code
             return (
               <div
