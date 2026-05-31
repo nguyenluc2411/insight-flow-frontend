@@ -12,59 +12,30 @@ import { useRecommendations, useRecommendationsSummary, useRefreshRecommendation
 import { ACTION_LABELS } from "@/lib/constants"
 import { FeatureGate } from "@/components/feature/FeatureGate"
 import { useToast } from "@/hooks/use-toast"
+import type { TopAction } from "@/types/bff.types"
 
-// MOCK: displayed when ML service returns no data yet
-const MOCK_KPIS = [
-  { label: "Tổng hành động", value: "12", subtitle: "khuyến nghị của AI", trendType: "neutral" as const },
-  { label: "Giảm backlog", value: "-18%", subtitle: "dự kiến sau 30 ngày", trend: "3,400→2,788", trendType: "up" as const },
-  { label: "Tăng sell-through", value: "+11%", subtitle: "cải thiện dự kiến", trend: "41%→52%", trendType: "up" as const },
-  { label: "Giảm rủi ro markdown", value: "-15%", subtitle: "tránh markdown khẩn cấp", trend: "tiết kiệm ~18M VND", trendType: "up" as const },
-]
+// Action type → icon mapping
+const ACTION_ICONS: Record<string, string> = {
+  CLEARANCE: "sell",
+  RESTOCK: "local_shipping",
+  PROMOTE: "campaign",
+  OK: "check_circle",
+}
 
-const MOCK_TOP_ACTIONS = [
-  {
-    priority: "ƯU TIÊN RẤT CAO",
-    priorityColor: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-900",
-    icon: "local_shipping",
-    title: "Chuyển Wide Leg Trousers → Hà Nội + TikTok",
-    description: "Di chuyển 150 đơn vị từ TP.HCM sang Hà Nội và đẩy mạnh TikTok Shop — Bottoms đang trending +28% tại Hà Nội",
-    impact: "Giảm tồn kho 33%, tăng sell-through 18%",
-    confidence: 92,
-  },
-  {
-    priority: "ƯU TIÊN CAO",
-    priorityColor: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-900",
-    icon: "sell",
-    title: "Markdown Summer Light Jacket 12%",
-    description: "Giảm giá 12% ngay bây giờ để tránh markdown sâu hơn cuối mùa — sell-through chỉ 24% sau 45 ngày",
-    impact: "Thoát 280 đv tồn, tránh markdown 25% sau 30 ngày",
-    confidence: 88,
-  },
-  {
-    priority: "CHIẾN LƯỢC",
-    priorityColor: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-400 dark:border-indigo-900",
-    icon: "block",
-    title: "Giảm nhập Bottoms kỳ tới 30%",
-    description: "Tồn kho Bottoms hiện đang chiếm 62% tổng tồn — cân bằng lại danh mục để tối ưu vốn",
-    impact: "Giải phóng ~45M VND vốn đầu tư vào Tops",
-    confidence: 90,
-  },
-]
+// Priority → badge color
+const PRIORITY_COLOR: Record<string, string> = {
+  HIGH: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-900",
+  MEDIUM: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-900",
+  LOW: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-400 dark:border-indigo-900",
+}
 
-const MOCK_DETAIL_TABLE = [
-  { sku: "SKU-001", category: "Bottoms", issue: "Tồn kho cao", action: "Chuyển kênh/khu vực", impact: "Giảm 33% tồn", priority: "HIGH" as const, confidence: 92 },
-  { sku: "SKU-002", category: "Áo khoác", issue: "Chậm bán", action: "Markdown 12%", impact: "Tăng sell-through 28%", priority: "HIGH" as const, confidence: 88 },
-  { sku: "SKU-003", category: "Váy", issue: "Tồn vừa", action: "Promote TikTok", impact: "Tăng đơn 18%", priority: "MEDIUM" as const, confidence: 80 },
-  { sku: "SKU-004", category: "Tops", issue: "Bán tốt", action: "Tăng nhập", impact: "+22% doanh thu", priority: "STRATEGIC" as const, confidence: 85 },
-  { sku: "SKU-005", category: "Phụ kiện", issue: "Cơ hội mới", action: "Thêm vào danh mục", impact: "+15% biên lợi nhuận", priority: "STRATEGIC" as const, confidence: 78 },
-]
+const PRIORITY_LABEL: Record<string, string> = {
+  HIGH: "ƯU TIÊN CAO",
+  MEDIUM: "ƯU TIÊN VỪA",
+  LOW: "CHIẾN LƯỢC",
+}
 
-const MOCK_ACTION_DIST = [
-  { channel: "TikTok Shop", count: 5, pct: 42 },
-  { channel: "Website", count: 3, pct: 25 },
-  { channel: "Kho TP.HCM", count: 2, pct: 17 },
-  { channel: "Kho Hà Nội", count: 2, pct: 16 },
-]
+const CONFIDENCE_FROM_PRIORITY: Record<string, number> = { HIGH: 90, MEDIUM: 75, LOW: 60 }
 
 const AI_LOGIC_RULES = [
   "Ưu tiên hành động nếu sell-through <30% và tuổi tồn kho >45 ngày",
@@ -72,6 +43,24 @@ const AI_LOGIC_RULES = [
   "Markdown 10-15% nếu còn >60 ngày đến cuối mùa và sell-through <40%",
   "Đề xuất nhập thêm nếu sell-through >75% và stock-out risk >60%",
 ]
+
+function buildTopActionCard(item: TopAction) {
+  const impact = item.action === "CLEARANCE" && item.suggestedDiscountPct
+    ? `Đề xuất giảm ${item.suggestedDiscountPct}% — thoát ${item.currentStock ?? "?"} đv tồn`
+    : item.action === "RESTOCK" && item.suggestedRestockQty
+    ? `Nhập thêm ${item.suggestedRestockQty} đv để tránh stockout`
+    : item.reason ?? "Xem chi tiết tại bảng đề xuất"
+
+  return {
+    priority: PRIORITY_LABEL[item.priority] ?? item.priority,
+    priorityColor: PRIORITY_COLOR[item.priority] ?? PRIORITY_COLOR.LOW,
+    icon: ACTION_ICONS[item.action] ?? "recommend",
+    title: `${ACTION_LABELS[item.action] ?? item.action} — Variant ${item.variantId.slice(-6)}`,
+    description: item.reason ?? "Phân tích dựa trên dữ liệu bán hàng và tồn kho hiện tại",
+    impact,
+    confidence: CONFIDENCE_FROM_PRIORITY[item.priority] ?? 70,
+  }
+}
 
 export default function RecommendationsPage() {
   return (
@@ -90,10 +79,46 @@ function RecommendationsPageContent() {
   const realItems = recoData?.items ?? []
   const totalActions = summary?.total ?? recoData?.total ?? 0
 
+  // KPIs from real summary data
+  const impact = summary?.estimatedImpact
   const kpis = [
-    { ...MOCK_KPIS[0], value: String(totalActions > 0 ? totalActions : MOCK_KPIS[0].value) },
-    ...MOCK_KPIS.slice(1),
+    {
+      label: "Tổng hành động",
+      value: isLoading ? "..." : String(totalActions),
+      subtitle: "khuyến nghị của AI",
+      trendType: "neutral" as const,
+    },
+    {
+      label: "Cần thanh lý",
+      value: isLoading ? "..." : String(impact?.clearanceItems ?? 0),
+      subtitle: "SKU cần clearance",
+      trendType: (impact?.clearanceItems ?? 0) > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "Cần nhập thêm",
+      value: isLoading ? "..." : String(impact?.restockItems ?? 0),
+      subtitle: "SKU cần restock",
+      trendType: (impact?.restockItems ?? 0) > 0 ? ("up" as const) : ("neutral" as const),
+    },
+    {
+      label: "Giảm giá đề xuất",
+      value: isLoading ? "..." : (impact?.avgDiscountPct ? `${impact.avgDiscountPct}%` : "—"),
+      subtitle: "trung bình cho clearance",
+      trendType: "neutral" as const,
+    },
   ]
+
+  // Top 3 actions from BFF summary
+  const topActionCards = (summary?.topActions ?? []).slice(0, 3).map(buildTopActionCard)
+
+  // Action distribution from BFF summary.byAction
+  const byAction = summary?.byAction ?? {}
+  const actionDistTotal = Object.values(byAction).reduce((a, b) => a + b, 0)
+  const actionDist = Object.entries(byAction).map(([action, count]) => ({
+    label: ACTION_LABELS[action] ?? action,
+    count,
+    pct: actionDistTotal > 0 ? Math.round((count / actionDistTotal) * 100) : 0,
+  }))
 
   function handleRefresh() {
     refresh(undefined, {
@@ -137,37 +162,50 @@ function RecommendationsPageContent() {
 
       {/* Top Actions + AI Explanation */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Top Actions */}
+        {/* Top Actions — real BFF data */}
         <div className="lg:col-span-2">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
             3 hành động ưu tiên cao
           </h2>
-          <div className="space-y-4">
-            {MOCK_TOP_ACTIONS.map((action, i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary text-[16px]">{action.icon}</span>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : topActionCards.length > 0 ? (
+            <div className="space-y-4">
+              {topActionCards.map((action, i) => (
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary text-[16px]">{action.icon}</span>
+                      </div>
+                      <span className={`px-2.5 py-1 text-[11px] font-bold rounded border uppercase tracking-wider ${action.priorityColor}`}>
+                        {action.priority}
+                      </span>
                     </div>
-                    <span className={`px-2.5 py-1 text-[11px] font-bold rounded border uppercase tracking-wider ${action.priorityColor}`}>
-                      {action.priority}
-                    </span>
+                    <ConfidenceBadge value={action.confidence} />
                   </div>
-                  <ConfidenceBadge value={action.confidence} />
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-2">{action.title}</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">{action.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400 font-medium">
+                    <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                    {action.impact}
+                  </div>
                 </div>
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-2">{action.title}</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">{action.description}</p>
-                <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400 font-medium">
-                  <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                  {action.impact}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-8 text-center">
+              <span className="material-symbols-outlined text-slate-400 text-4xl mb-3 block">recommend</span>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có đề xuất</p>
+              <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                Tải dữ liệu bán hàng hoặc nhấn "Làm mới" để AI phân tích
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Right — AI Insight + Simulation */}
@@ -175,22 +213,22 @@ function RecommendationsPageContent() {
           <AIInsightBox
             title="Tại sao AI đề xuất điều này?"
             items={[
-              "Phân tích 1,000 đơn vị tồn kho và 950 giao dịch bán hàng",
-              "So sánh với xu hướng thị trường thời trang Việt Nam Q2 2026",
-              "Dự đoán dựa trên mô hình ML được đào tạo trên 500+ shop thời trang VN",
+              "Phân tích tồn kho và dữ liệu bán hàng thực tế của shop",
+              "So sánh với xu hướng thị trường thời trang Việt Nam",
+              "Áp dụng quy tắc rule-based theo Phase 1 — tồn lâu, sell-through thấp",
             ]}
             variant="purple"
           />
 
-          {/* Simulation Preview */}
+          {/* Simulation Preview — static estimates */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-5">
             <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">
               Mô phỏng sau 30 ngày
             </p>
             <div className="space-y-3">
               {[
-                { label: "Backlog", before: 3400, after: 2914, unit: "đv", pct: 86 },
-                { label: "Sell-through", before: "41%", after: "53%", pct: 53 },
+                { label: "SKU clearance", before: impact?.clearanceItems ?? 0, after: 0, pct: 100 },
+                { label: "SKU restock", before: 0, after: impact?.restockItems ?? 0, pct: Math.min(100, (impact?.restockItems ?? 0) * 10) },
               ].map((sim) => (
                 <div key={sim.label}>
                   <div className="flex justify-between text-xs mb-1">
@@ -207,16 +245,16 @@ function RecommendationsPageContent() {
         </div>
       </div>
 
-      {/* Detail Table */}
+      {/* Detail Table — real ML data, empty state when no data */}
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 mb-8">
         <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
           Tất cả đề xuất {realItems.length > 0 && <span className="text-primary">({realItems.length})</span>}
         </h2>
         {isLoading ? (
           <div className="space-y-3">
-            {[1,2,3].map(i => <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />)}
+            {[1, 2, 3].map(i => <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />)}
           </div>
-        ) : (
+        ) : realItems.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -229,55 +267,57 @@ function RecommendationsPageContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {realItems.length > 0
-                  ? realItems.map((row) => (
-                      <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.variantId.slice(0, 8)}</td>
-                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">—</td>
-                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{ACTION_LABELS[row.action] ?? row.action}</td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 text-xs max-w-[200px] truncate">{row.reason ?? "—"}</td>
-                        <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
-                        <td className="py-3"><ConfidenceBadge value={0} /></td>
-                      </tr>
-                    ))
-                  : MOCK_DETAIL_TABLE.map((row) => (
-                      <tr key={row.sku} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.sku}</td>
-                        <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">{row.category}</td>
-                        <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{row.action}</td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{row.issue}</td>
-                        <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
-                        <td className="py-3"><ConfidenceBadge value={row.confidence} /></td>
-                      </tr>
-                    ))
-                }
+                {realItems.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.variantId.slice(0, 8)}</td>
+                    <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">—</td>
+                    <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{ACTION_LABELS[row.action] ?? row.action}</td>
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 text-xs max-w-[200px] truncate">{row.reason ?? "—"}</td>
+                    <td className="py-3 pr-4"><RiskBadge level={row.priority} /></td>
+                    <td className="py-3"><ConfidenceBadge value={CONFIDENCE_FROM_PRIORITY[row.priority] ?? 70} /></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
+          </div>
+        ) : (
+          <div className="py-8 text-center">
+            <span className="material-symbols-outlined text-slate-300 text-4xl mb-3 block">table_rows</span>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Chưa có đề xuất nào</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              Tải dữ liệu bán hàng hoặc nhấn "Làm mới" để AI tạo đề xuất
+            </p>
           </div>
         )}
       </div>
 
-      {/* Action Distribution + AI Logic */}
+      {/* Action Distribution (real) + AI Logic Rules (static) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Distribution */}
+        {/* Distribution — real byAction data */}
         <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-100 dark:border-slate-800">
           <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4">
-            Phân bổ hành động theo kênh
+            Phân bổ theo loại hành động
           </h3>
-          <div className="space-y-3">
-            {MOCK_ACTION_DIST.map((dist) => (
-              <div key={dist.channel}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">{dist.channel}</span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{dist.count} hành động</span>
+          {actionDist.length > 0 ? (
+            <div className="space-y-3">
+              {actionDist.map((dist) => (
+                <div key={dist.label}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">{dist.label}</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{dist.count} hành động</span>
+                  </div>
+                  <ProgressBar value={dist.pct} />
                 </div>
-                <ProgressBar value={dist.pct} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">
+              Chưa có dữ liệu phân bổ
+            </p>
+          )}
         </div>
 
-        {/* AI Logic Rules */}
+        {/* AI Logic Rules — factual, static */}
         <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-100 dark:border-slate-800">
           <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4">
             Quy tắc AI sử dụng
@@ -301,7 +341,9 @@ function RecommendationsPageContent() {
           <span className="material-symbols-outlined text-2xl">download</span>
           <div className="text-left">
             <p className="font-bold">Xuất kế hoạch hành động</p>
-            <p className="text-indigo-200 text-sm">Excel / PDF với 12 đề xuất</p>
+            <p className="text-indigo-200 text-sm">
+              {totalActions > 0 ? `Excel / PDF với ${totalActions} đề xuất` : "Chưa có đề xuất để xuất"}
+            </p>
           </div>
         </button>
         <Link

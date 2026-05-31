@@ -8,13 +8,8 @@ import { TrendIndicator } from "@/components/common/TrendIndicator"
 import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { useForecastSummary } from "@/hooks/useForecast"
 import { useCategories } from "@/hooks/useCatalog"
+import { useRecommendations } from "@/hooks/useRecommendations"
 import { FeatureGate } from "@/components/feature/FeatureGate"
-
-const MOCK_AVOID_PRODUCTS = [
-  { sku: "SKU-008", name: "Áo Blazer Formal", category: "Tops", reason: "Thị trường bão hòa, -22% demand", risk: "HIGH" as const },
-  { sku: "SKU-012", name: "Quần Jean Skinny", category: "Bottoms", reason: "Xu hướng giảm, oversized đang thay thế", risk: "HIGH" as const },
-  { sku: "SKU-019", name: "Đầm Cocktail Mini", category: "Dresses", reason: "Cạnh tranh cao, biên lợi nhuận thấp", risk: "MEDIUM" as const },
-]
 
 const AI_STRATEGY_ITEMS = [
   "Tập trung vào Linen và Natural Fabrics — đây là meta của H2 2026",
@@ -42,6 +37,16 @@ export default function ForecastPage() {
 function ForecastPageContent() {
   const { data: forecast, isLoading } = useForecastSummary()
   const { data: categories } = useCategories()
+  const { data: clearanceData } = useRecommendations({ action: "CLEARANCE" })
+
+  // Map ML clearance recommendations → avoid-products table format
+  const avoidProducts = (clearanceData?.items ?? []).map((item) => ({
+    sku: item.variantId.slice(0, 8) + "…",
+    name: `Variant ${item.variantId.slice(-6)}`,
+    category: "—",
+    reason: item.reason ?? "Nhu cầu thấp / tồn lâu ngày",
+    risk: item.priority as "HIGH" | "MEDIUM" | "LOW",
+  }))
 
   const categoryTrends = forecast?.categoryTrends ?? []
   const topProducts = forecast?.topProducts ?? []
@@ -161,35 +166,44 @@ function ForecastPageContent() {
         </div>
       )}
 
-      {/* Avoid Products Table */}
+      {/* Avoid Products Table — real ML clearance data */}
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 mb-8">
         <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
           Sản phẩm không nên nhập thêm
+          {avoidProducts.length > 0 && (
+            <span className="ml-2 text-xs font-normal text-primary">({avoidProducts.length} từ ML)</span>
+          )}
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800">
-                {["SKU", "Tên sản phẩm", "Danh mục", "Lý do", "Rủi ro"].map((h) => (
-                  <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {MOCK_AVOID_PRODUCTS.map((p) => (
-                <tr key={p.sku}>
-                  <td className="py-3 pr-4 text-xs font-mono text-slate-500">{p.sku}</td>
-                  <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{p.name}</td>
-                  <td className="py-3 pr-4 text-slate-500 dark:text-slate-400">{p.category}</td>
-                  <td className="py-3 pr-4 text-sm text-slate-600 dark:text-slate-400">{p.reason}</td>
-                  <td className="py-3"><RiskBadge level={p.risk} /></td>
+        {avoidProducts.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800">
+                  {["SKU", "Variant ID", "Danh mục", "Lý do AI", "Rủi ro"].map((h) => (
+                    <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {avoidProducts.map((p) => (
+                  <tr key={p.sku}>
+                    <td className="py-3 pr-4 text-xs font-mono text-slate-500">{p.sku}</td>
+                    <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{p.name}</td>
+                    <td className="py-3 pr-4 text-slate-500 dark:text-slate-400">{p.category}</td>
+                    <td className="py-3 pr-4 text-sm text-slate-600 dark:text-slate-400">{p.reason}</td>
+                    <td className="py-3"><RiskBadge level={p.risk} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500 dark:text-slate-400 py-4 text-center">
+            Chưa có dữ liệu — tải lịch sử bán hàng để AI xác định sản phẩm rủi ro.
+          </p>
+        )}
       </div>
 
       {/* AI Strategy Box */}

@@ -11,47 +11,13 @@ import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
 import { useHealthCheck } from "@/hooks/useHealthCheck"
 import { useInventorySummary, useCategories } from "@/hooks/useCatalog"
-
-const MOCK_RISK_ITEMS = [
-  { sku: "SKU-001", name: "Quần Wide Leg Trousers Đen", stock: 420, sellThrough: 18, risk: "HIGH" as const },
-  { sku: "SKU-002", name: "Áo Khoác Light Summer Jacket", stock: 280, sellThrough: 24, risk: "HIGH" as const },
-  { sku: "SKU-003", name: "Váy Midi Floral Print", stock: 150, sellThrough: 45, risk: "MEDIUM" as const },
-  { sku: "SKU-004", name: "Áo Thun Oversize Basic", stock: 90, sellThrough: 68, risk: "LOW" as const },
-  { sku: "SKU-005", name: "Túi Tote Canvas", stock: 75, sellThrough: 72, risk: "STRATEGIC" as const },
-]
-
-const MOCK_ISSUES = [
-  {
-    icon: "inventory_2",
-    title: "Tồn kho quá mức tại TP.HCM",
-    description: "Quần Wide Leg và Áo khoác hè tập trung 68% tồn kho — cần phân phối lại ngay",
-    severity: "NGHIÊM TRỌNG" as const,
-  },
-  {
-    icon: "location_on",
-    title: "Cơ hội phân phối sang Hà Nội",
-    description: "Xu hướng Bottoms đang tăng 28% tại Hà Nội trong Q2 — chuyển hàng từ TP.HCM",
-    severity: "CHIẾN LƯỢC" as const,
-  },
-  {
-    icon: "sell",
-    title: "Summer Light Jacket cần markdown",
-    description: "Sell-through thấp sau 45 ngày — giảm giá để tránh tồn cuối mùa",
-    severity: "QUAN TRỌNG" as const,
-  },
-]
-
-const AI_INSIGHTS = [
-  "Áp lực tồn kho cao hơn benchmark ngành thời trang VN",
-  "TikTok Shop chiếm tỷ trọng lớn doanh số nhưng nhiều sản phẩm chưa được tối ưu",
-  "Bottoms là danh mục có rủi ro cao nhất",
-  "Nếu không có hành động trong 30 ngày, markdown bắt buộc cho nhiều SKU",
-]
+import { useRecommendations } from "@/hooks/useRecommendations"
 
 export default function HealthCheckPage() {
   const { data: health, isLoading } = useHealthCheck()
   const { data: invSummary, isLoading: invLoading } = useInventorySummary()
   const { data: categories } = useCategories()
+  const { data: clearanceData } = useRecommendations({ action: "CLEARANCE" })
 
   const loading = isLoading || invLoading
   const pressurePct = health?.inventoryPressurePct ?? 0
@@ -60,6 +26,47 @@ export default function HealthCheckPage() {
   const totalSKU = invSummary?.totalSKU ?? 0
   const totalQty = invSummary?.totalQuantity ?? 0
   const lowStock = invSummary?.lowStockCount ?? 0
+
+  // Map ML clearance recommendations → RiskItemTable format
+  const riskItems = (clearanceData?.items ?? []).map((item) => ({
+    sku: item.variantId.slice(0, 8) + "…",
+    name: item.reason ?? `Variant ${item.variantId.slice(-6)}`,
+    stock: item.currentStock ?? 0,
+    sellThrough: item.salesVelocity30d != null && (item.currentStock ?? 0) > 0
+      ? Math.min(99, Math.round((item.salesVelocity30d * 30) / ((item.currentStock ?? 1) + item.salesVelocity30d * 30) * 100))
+      : 0,
+    risk: item.priority as "HIGH" | "MEDIUM" | "LOW",
+  }))
+
+  // Dynamic issues from real health + inventory data
+  const dynamicIssues = [
+    ...(slowSKU > 0 ? [{
+      icon: "inventory_2",
+      title: `${slowSKU} SKU chậm bán cần xử lý`,
+      description: `Áp lực tồn kho ${pressurePct.toFixed(0)}% — ưu tiên clearance hoặc chuyển kênh`,
+      severity: (pressurePct > 50 ? "NGHIÊM TRỌNG" : "QUAN TRỌNG") as "NGHIÊM TRỌNG" | "QUAN TRỌNG" | "CHIẾN LƯỢC",
+    }] : []),
+    ...(lowStock > 0 ? [{
+      icon: "warning",
+      title: `${lowStock} SKU dưới ngưỡng tái đặt hàng`,
+      description: "Cần nhập thêm hàng để tránh stockout trong 7-14 ngày tới",
+      severity: "QUAN TRỌNG" as const,
+    }] : []),
+    ...((clearanceData?.items ?? []).length > 0 ? [{
+      icon: "sell",
+      title: `${clearanceData!.items.length} mã hàng cần thanh lý`,
+      description: "AI phát hiện hàng tồn lâu ngày — xem bảng SKU cần xử lý bên dưới",
+      severity: "CHIẾN LƯỢC" as const,
+    }] : []),
+  ]
+
+  // Dynamic AI insights from real data
+  const aiInsights = [
+    ...(slowSKU > 0 ? [`${slowSKU} SKU chậm bán — cần hành động trong 30 ngày`] : []),
+    ...(pressurePct > 30 ? [`Áp lực tồn kho ${pressurePct.toFixed(0)}% vượt ngưỡng bình thường`] : []),
+    ...(lowStock > 0 ? [`${lowStock} vị trí tồn kho dưới ngưỡng reorder — nguy cơ stockout`] : []),
+    "Kết nối POS để nhận phân tích chi tiết hơn theo từng kênh bán",
+  ]
 
   const kpis = [
     {
@@ -88,7 +95,6 @@ export default function HealthCheckPage() {
     },
   ]
 
-  // Prefer BFF categoryRisks if available; enrich names with catalog categories
   const categoryNameMap = Object.fromEntries(
     (categories ?? []).map((c) => [c.id, c.name])
   )
@@ -99,7 +105,6 @@ export default function HealthCheckPage() {
     total: Math.max(c.units * 2, 100),
   }))
 
-  // Map BFF ChannelPerformance → component format
   const channelData = (health?.channelPerformance ?? []).map((c) => ({
     name: c.channel,
     orders: c.orders,
@@ -133,7 +138,6 @@ export default function HealthCheckPage() {
         <KPIGrid data={kpis} />
       </div>
 
-      {/* Skeleton while loading */}
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
@@ -144,7 +148,6 @@ export default function HealthCheckPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Category Risk Chart */}
             <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
                 Tồn kho theo danh mục
@@ -154,26 +157,36 @@ export default function HealthCheckPage() {
               ]} />
             </div>
 
-            {/* Risk Item Table */}
+            {/* Risk Item Table — real ML clearance data */}
             <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
                 SKU cần xử lý
+                {riskItems.length > 0 && (
+                  <span className="ml-2 text-xs font-normal text-primary">({riskItems.length} từ ML)</span>
+                )}
               </h2>
-              <RiskItemTable items={MOCK_RISK_ITEMS} />
+              {riskItems.length > 0 ? (
+                <RiskItemTable items={riskItems} />
+              ) : (
+                <p className="text-sm text-slate-500 dark:text-slate-400 py-4 text-center">
+                  Chưa có SKU nào cần clearance — tải dữ liệu bán hàng để AI phân tích.
+                </p>
+              )}
             </div>
 
-            {/* Priority Issues */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-              <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                Vấn đề ưu tiên
-              </h2>
-              <PriorityIssues issues={MOCK_ISSUES} />
-            </div>
+            {/* Priority Issues — dynamic */}
+            {dynamicIssues.length > 0 && (
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+                <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
+                  Vấn đề ưu tiên
+                </h2>
+                <PriorityIssues issues={dynamicIssues} />
+              </div>
+            )}
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
-            {/* Channel Performance */}
             <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
                 Hiệu suất kênh bán
@@ -183,8 +196,7 @@ export default function HealthCheckPage() {
               ]} />
             </div>
 
-            {/* AI Insights */}
-            <AIInsightBox title="Phân tích AI" items={AI_INSIGHTS} variant="dark" />
+            <AIInsightBox title="Phân tích AI" items={aiInsights} variant="dark" />
 
             <div className="bg-green-50 dark:bg-green-950 rounded-xl p-4 border border-green-200 dark:border-green-900">
               <div className="flex items-center gap-2 mb-2">
