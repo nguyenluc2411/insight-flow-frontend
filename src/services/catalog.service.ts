@@ -210,4 +210,9 @@ export const catalogService = {
     const { data } = await api.get("/api/v1/catalog/categories")
     return data
   },
+
+  async getActiveVariants(size = 100): Promise<ProductVariant[]> {
+    const { data } = await api.get(`/api/v1/catalog/products/variants?size=${size}`)
+    return data?.content ?? []
+  },
 }

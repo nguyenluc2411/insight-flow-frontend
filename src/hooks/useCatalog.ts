@@ -32,3 +32,13 @@ export function useProductVariants(productId: string | undefined) {
     staleTime: 5 * 60 * 1000,
   })
 }
+
+export function useActiveVariants() {
+  const tenantId = useAuthStore((s) => s.tenant?.id)
+  return useQuery<ProductVariant[]>({
+    queryKey: ["active-variants", tenantId],
+    queryFn: () => catalogService.getActiveVariants(),
+    enabled: !!tenantId,
+    staleTime: 5 * 60 * 1000,
+  })
+}
