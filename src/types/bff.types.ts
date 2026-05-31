@@ -40,6 +40,7 @@ export interface CategoryTrend {
 
 export interface TopProduct {
   variantId: string
+  sku?: string
   forecastDays30: number
   confidence: string
 }

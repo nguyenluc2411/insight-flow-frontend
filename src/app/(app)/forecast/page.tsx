@@ -172,7 +172,9 @@ function ForecastPageContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {topProducts.map((p) => (
               <div key={p.variantId} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-4 hover:shadow-soft transition">
-                <p className="font-mono text-xs text-slate-400 mb-2">{p.variantId.slice(0, 8)}…</p>
+                <p className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 truncate" title={p.sku ?? p.variantId}>
+                  {p.sku ?? p.variantId.slice(0, 8) + "…"}
+                </p>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">

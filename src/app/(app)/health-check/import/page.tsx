@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { FileDropzone } from "@/components/import/FileDropzone"
 import { WorkflowSteps } from "@/components/import/WorkflowSteps"
 import { ProgressBar } from "@/components/common/ProgressBar"
@@ -188,20 +189,40 @@ export default function ImportPage() {
         </div>
       </div>
 
-      {/* Bottom CTA Banner */}
-      <div className="mt-8 bg-brand-gradient rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4">
-        <div className="flex-1 text-white">
-          <p className="font-bold text-lg">Dùng thử với dữ liệu mẫu</p>
-          <p className="text-indigo-200 text-sm mt-1">
-            Chưa có dữ liệu thực? Dùng bộ dữ liệu mẫu của một shop thời trang TP.HCM
-          </p>
+      {/* Alternative paths — shown when user doesn't have a file ready */}
+      <div className="mt-8">
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-4">
+          Chưa có file dữ liệu? Bắt đầu theo cách khác:
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Path 1: Connect POS */}
+          <Link
+            href={ROUTES.SETTINGS_INTEGRATIONS}
+            className="group flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-primary/50 hover:shadow-soft transition"
+          >
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors">
+              <span className="material-symbols-outlined text-primary group-hover:text-white transition-colors text-[20px]">sync</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">Kết nối KiotViet / Sapo</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tự động đồng bộ, không cần upload file</p>
+            </div>
+            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[18px]">arrow_forward</span>
+          </Link>
+
+          {/* Path 2: What data is needed */}
+          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[20px]">info</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">Không có lịch sử bán hàng?</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Hệ thống vẫn dự báo được dựa trên xu hướng thị trường HCM — kết nối POS để có dự báo chính xác hơn.
+              </p>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={() => handleFileAccepted(new File(["mock"], "sample_data.csv", { type: "text/csv" }))}
-          className="shrink-0 px-6 py-3 bg-white text-primary font-bold text-sm rounded-xl hover:bg-indigo-50 transition"
-        >
-          Dùng dữ liệu mẫu
-        </button>
       </div>
     </div>
   )
