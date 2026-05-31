@@ -11,7 +11,7 @@ export const uploadService = {
   async uploadFile(file: File, onProgress?: (pct: number) => void): Promise<UploadResponse> {
     const formData = new FormData()
     formData.append("file", file)
-    const { data } = await api.post("/api/v1/integration/import", formData, {
+    const { data } = await api.post("/api/v1/integrations/import", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       onUploadProgress: (e) => {
         if (onProgress && e.total) onProgress(Math.round((e.loaded * 100) / e.total))
@@ -20,7 +20,7 @@ export const uploadService = {
     return data
   },
   async getImportStatus(fileId: string): Promise<UploadResponse> {
-    const { data } = await api.get(`/api/v1/integration/import/${fileId}`)
+    const { data } = await api.get(`/api/v1/integrations/import/${fileId}`)
     return data
   },
 }
