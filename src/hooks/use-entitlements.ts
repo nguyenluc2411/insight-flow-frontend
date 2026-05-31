@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import { billingService } from "@/services/billing.service"
 
-// Module-level cache so navigating between pages doesn't refetch. Warmed on the
-// first app-shell mount; cleared on logout (see auth store).
+// Module-level cache so navigating between pages doesn't refetch.
+// Cleared on logout (see auth store) and on billing error (to allow retry).
 let featuresCache: string[] | null = null
 let inflight: Promise<string[]> | null = null
 
 function loadFeatures(): Promise<string[]> {
-  if (featuresCache) return Promise.resolve(featuresCache)
+  if (featuresCache !== null) return Promise.resolve(featuresCache)
   if (!inflight) {
     inflight = billingService
       .getCurrentSubscription()
@@ -18,9 +18,10 @@ function loadFeatures(): Promise<string[]> {
         return featuresCache
       })
       .catch(() => {
-        // No subscription yet / billing down → fail safe: no premium features.
-        featuresCache = []
-        return featuresCache
+        // Billing down or no subscription → do NOT cache, allow retry on next mount.
+        // Return empty array for this render only.
+        featuresCache = null
+        return [] as string[]
       })
       .finally(() => {
         inflight = null
