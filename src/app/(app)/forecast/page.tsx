@@ -110,6 +110,28 @@ function ForecastPageContent() {
         ))}
       </div>
 
+      {/* Cold-start banner */}
+      {forecast?.hasColdStart && (
+        <div className="mb-6 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-xl p-4 flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-500 text-xl shrink-0 mt-0.5">info</span>
+          <div>
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Dự báo dựa trên xu hướng thị trường HCM</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+              Shop chưa có đủ lịch sử bán hàng. AI đang dùng dữ liệu Google Trends ngành thời trang HCM làm cơ sở.
+              Độ chính xác tăng dần sau 4 tuần có dữ liệu thực.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No products message */}
+      {forecast?.message && forecast.topProducts.length === 0 && (
+        <div className="mb-6 bg-slate-50 dark:bg-slate-800 rounded-xl p-8 text-center">
+          <span className="material-symbols-outlined text-slate-400 text-4xl mb-3 block">inventory_2</span>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{forecast.message}</p>
+        </div>
+      )}
+
       {/* Category Trends — real data */}
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 mb-8">
         <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">

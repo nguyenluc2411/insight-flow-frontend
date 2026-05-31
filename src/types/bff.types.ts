@@ -49,6 +49,8 @@ export interface ForecastSummaryResponse {
   topProducts: TopProduct[]
   overallConfidence: number
   partial: boolean
+  hasColdStart?: boolean
+  message?: string
   lastUpdated: string
 }
 
