@@ -1,6 +1,7 @@
 import Link from "next/link"
-import { ROUTES, APP_NAME, APP_FULL_NAME } from "@/lib/constants"
+import { ROUTES, APP_FULL_NAME } from "@/lib/constants"
 import { LandingPricing } from "@/components/landing/LandingPricing"
+import { Logo } from "@/components/common/Logo"
 
 const PROBLEMS = [
   { icon: "inventory_2", title: "Tồn kho quá mức", desc: "Vốn bị chôn vùi trong hàng không bán được, phải markdown giảm giá mạnh cuối mùa" },
@@ -50,12 +51,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-b border-slate-100 dark:border-slate-800">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center">
-              <span className="text-white text-sm font-black">F</span>
-            </div>
-            <span className="gradient-text font-black text-lg">{APP_FULL_NAME}</span>
-          </div>
+          <Logo size={30} />
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
             <a href="#features" className="hover:text-primary transition">Tính năng</a>
             <a href="#how-it-works" className="hover:text-primary transition">Cách hoạt động</a>
@@ -302,11 +298,8 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-wrap items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-brand-gradient flex items-center justify-center">
-                  <span className="text-white text-xs font-black">F</span>
-                </div>
-                <span className="gradient-text font-black">{APP_FULL_NAME}</span>
+              <div className="mb-2">
+                <Logo size={26} light />
               </div>
               <p className="text-xs text-slate-500">AI Dự báo Thời trang Việt Nam</p>
             </div>

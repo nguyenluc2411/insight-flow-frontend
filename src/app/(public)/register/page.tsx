@@ -10,8 +10,9 @@ import { authService } from "@/services/auth.service"
 import { useAuthStore } from "@/stores/auth.store"
 import { useToast } from "@/hooks/use-toast"
 import { parseApiError } from "@/lib/errors"
-import { ROUTES, APP_NAME } from "@/lib/constants"
+import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
+import { Logo } from "@/components/common/Logo"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -70,11 +71,8 @@ export default function RegisterPage() {
         {/* Left — Form */}
         <div className="w-full lg:w-1/2 p-8 lg:p-10 overflow-y-auto">
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center">
-              <span className="text-white text-sm font-black">F</span>
-            </div>
-            <span className="gradient-text font-black text-lg">{APP_NAME}</span>
+          <div className="mb-8">
+            <Logo size={30} />
           </div>
 
           <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-1">

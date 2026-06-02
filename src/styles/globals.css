@@ -2,47 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-
 @layer base {
   * { @apply border-border; }
   body { @apply bg-bg-base text-slate-900 font-sans antialiased; }
+
   :root {
+    /* shadcn compat */
     --background: 248 250 252;
     --foreground: 15 23 42;
     --primary: 99 102 241;
     --primary-foreground: 255 255 255;
     --border: 226 232 240;
     --radius: 0.5rem;
+
+    /* InsightFlow design tokens */
+    --brand-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    --hero-gradient:  linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+
+    --bg-base:    #F8FAFC;
+    --bg-surface: #ffffff;
+    --bg-subtle:  #f1f5f9;
+    --border-strong: #e2e8f0;
+
+    --fg-1: #0f172a;
+    --fg-2: #334155;
+    --fg-3: #475569;
+    --fg-4: #64748b;
+    --fg-muted: #94a3b8;
+
+    --success:        #16a34a;
+    --success-fg:     #15803d;
+    --success-bg:     #f0fdf4;
+    --success-border: #bbf7d0;
+
+    --danger:         #dc2626;
+    --danger-fg:      #b91c1c;
+    --danger-bg:      #fef2f2;
+    --danger-border:  #fecaca;
+
+    --warning:        #d97706;
+    --warning-fg:     #b45309;
+    --warning-bg:     #fffbeb;
+    --warning-border: #fde68a;
+
+    --info:           #6366f1;
+    --info-fg:        #4338ca;
+    --info-bg:        #eef2ff;
+    --info-border:    #c7d2fe;
+
+    --ai-dark-bg: #312e81;
+
+    --shadow-soft:  0 4px 20px rgba(0, 0, 0, 0.05);
+    --shadow-brand: 0 8px 30px rgba(99, 102, 241, 0.25);
+    --shadow-lg:    0 10px 30px rgba(15, 23, 42, 0.10);
+
+    --font-sans:    'Be Vietnam Pro', system-ui, sans-serif;
+    --font-display: 'Space Grotesk', 'Be Vietnam Pro', system-ui, sans-serif;
+    --font-mono:    ui-monospace, 'SF Mono', monospace;
   }
+
   .dark {
     --background: 15 23 42;
     --foreground: 248 250 252;
     --border: 51 65 85;
+    --bg-base: #0f172a;
+    --bg-surface: #1e293b;
+    --bg-subtle: #1e293b;
+    --fg-1: #f8fafc;
+    --fg-2: #e2e8f0;
+    --fg-3: #cbd5e1;
+    --fg-4: #94a3b8;
   }
 }
 
 @layer components {
+  /* ── Gradient helpers ─────────────────────────────────────── */
+  .gradient-text {
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+  /* alias matching design-tokens class name */
+  .if-gradient-text { @apply gradient-text; }
+
+  /* ── Glass card ───────────────────────────────────────────── */
   .glass-card {
     @apply bg-white/90 backdrop-blur-[10px] border border-white/20;
   }
   .dark .glass-card {
     @apply bg-slate-800/70 border-slate-700/20;
   }
-  .brand-gradient {
-    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+
+  /* ── Shadow utility ───────────────────────────────────────── */
+  .shadow-soft  { box-shadow: var(--shadow-soft); }
+  .shadow-brand { box-shadow: var(--shadow-brand); }
+
+  /* ── KPI typography (matches design-tokens .if-kpi) ──────── */
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--fg-1);
+    font-variant-numeric: tabular-nums;
   }
-  .gradient-text {
-    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .kpi-label {
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-4);
   }
-  .shadow-soft {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  /* ── AI insight dark box ──────────────────────────────────── */
+  .ai-dark-box {
+    background: var(--ai-dark-bg);
+    border-radius: 12px;
   }
+
+  /* ── Chart bar animation ──────────────────────────────────── */
   .chart-bar {
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

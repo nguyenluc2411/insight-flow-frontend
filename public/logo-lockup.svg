@@ -1,0 +1,32 @@
+<svg width="232" height="48" viewBox="0 0 232 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="InsightFlow AI">
+  <defs>
+    <linearGradient id="ifl-bg" x1="4" y1="2" x2="44" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"></stop>
+      <stop offset="0.55" stop-color="#4F46E5"></stop>
+      <stop offset="1" stop-color="#7C3AED"></stop>
+    </linearGradient>
+    <linearGradient id="ifl-sheen" x1="0" y1="0" x2="0" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.22"></stop>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"></stop>
+    </linearGradient>
+    <linearGradient id="ifl-flow" x1="148" y1="0" x2="196" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"></stop>
+      <stop offset="1" stop-color="#7C3AED"></stop>
+    </linearGradient>
+  </defs>
+  
+  <rect width="48" height="48" rx="13" fill="url(#ifl-bg)"></rect>
+  <rect width="48" height="48" rx="13" fill="url(#ifl-sheen)"></rect>
+  <rect x="11" y="28" width="6.5" height="9" rx="3.25" fill="#ffffff" fill-opacity="0.55"></rect>
+  <rect x="20.75" y="22" width="6.5" height="15" rx="3.25" fill="#ffffff" fill-opacity="0.78"></rect>
+  <rect x="30.5" y="15" width="6.5" height="22" rx="3.25" fill="#ffffff"></rect>
+  <circle cx="33.75" cy="9" r="6.5" fill="#ffffff" fill-opacity="0.18"></circle>
+  <circle cx="33.75" cy="9" r="3.3" fill="#ffffff"></circle>
+  
+  <text x="62" y="30" font-family="&#39;Space Grotesk&#39;,&#39;Be Vietnam Pro&#39;,sans-serif" font-size="22" font-weight="700" letter-spacing="-0.5">
+    <tspan fill="#0F172A">Insight</tspan><tspan fill="url(#ifl-flow)">Flow</tspan>
+  </text>
+  
+  <rect x="196" y="14" width="30" height="20" rx="6" fill="#EEF2FF"></rect>
+  <text x="211" y="28.5" text-anchor="middle" font-family="&#39;Space Grotesk&#39;,&#39;Be Vietnam Pro&#39;,sans-serif" font-size="12" font-weight="700" letter-spacing="0.5" fill="#4F46E5">AI</text>
+</svg>

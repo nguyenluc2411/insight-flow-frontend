@@ -4,9 +4,10 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { NAV_ITEMS, APP_NAME, ROUTES } from "@/lib/constants"
+import { NAV_ITEMS, ROUTES } from "@/lib/constants"
 import { useAuthStore } from "@/stores/auth.store"
 import { useEntitlements } from "@/hooks/use-entitlements"
+import { Logo } from "@/components/common/Logo"
 
 export function Header() {
   const pathname = usePathname()
@@ -44,11 +45,8 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center">
-              <span className="text-white text-sm font-black">F</span>
-            </div>
-            <span className="gradient-text font-black text-lg tracking-tight">{APP_NAME}</span>
+          <Link href={ROUTES.DASHBOARD} className="shrink-0 hover:opacity-90 transition-opacity">
+            <Logo size={32} />
           </Link>
 
           {/* Desktop Nav */}

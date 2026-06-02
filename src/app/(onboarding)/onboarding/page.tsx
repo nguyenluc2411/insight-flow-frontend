@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation"
 import { useOnboardingStore } from "@/stores/onboarding.store"
 import { useAuthStore } from "@/stores/auth.store"
 import { authService } from "@/services/auth.service"
-import { ROUTES, LOCATIONS, FASHION_CATEGORIES, BUSINESS_SCALES, PLATFORMS, APP_NAME } from "@/lib/constants"
+import { ROUTES, LOCATIONS, FASHION_CATEGORIES, BUSINESS_SCALES, PLATFORMS } from "@/lib/constants"
+import { Logo } from "@/components/common/Logo"
 import { parseApiError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -56,11 +57,8 @@ export default function OnboardingPage() {
       {/* Header */}
       <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-100 dark:border-slate-800">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center">
-              <span className="text-white text-sm font-black">F</span>
-            </div>
-            <span className="gradient-text font-black text-lg">{APP_NAME}</span>
+          <Link href="/" className="hover:opacity-90 transition-opacity">
+            <Logo size={30} />
           </Link>
           <button className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">language</span>

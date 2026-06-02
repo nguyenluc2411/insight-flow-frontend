@@ -9,8 +9,9 @@ import { loginSchema, type LoginFormData } from "@/lib/validations"
 import { useAuthStore } from "@/stores/auth.store"
 import { useToast } from "@/hooks/use-toast"
 import { parseApiError } from "@/lib/errors"
-import { ROUTES, APP_NAME } from "@/lib/constants"
+import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
+import { LogoMark } from "@/components/common/Logo"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,11 +44,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center mx-auto mb-3">
-            <span className="text-white text-xl font-black">F</span>
+          <div className="flex justify-center mb-3">
+            <LogoMark size={52} />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">{APP_NAME}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">AI Dự báo Thời trang Việt Nam</p>
+          <h1 className="font-display font-bold text-2xl tracking-tight text-slate-900 dark:text-slate-100">
+            Insight<span className="gradient-text">Flow</span>{" "}
+            <span className="text-primary">AI</span>
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">AI Dự báo Thời trang Việt Nam</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
