@@ -1,66 +1,63 @@
+"use client"
+
 import { KPICard } from "@/components/common/KPICard"
-import { AIInsightBox } from "@/components/common/AIInsightBox"
 import { TrendIndicator } from "@/components/common/TrendIndicator"
 import { ProgressBar } from "@/components/common/ProgressBar"
+import { LoadingSkeleton } from "@/components/common/LoadingSkeleton"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
 import { FeatureGate } from "@/components/feature/FeatureGate"
+import { useMarketSummary } from "@/hooks/useMarket"
+import type { ChannelOpportunity, RegionDemand, TrendHighlight, ProductOpportunity } from "@/types/bff.types"
 
-// TODO: replace with API calls
-const MOCK_KPIS = [
-  { label: "Điểm cơ hội thị trường", value: "92/100", subtitle: "Cao nhất từ trước đến nay", trend: "+7 điểm", trendType: "up" as const },
-  { label: "Nhóm sản phẩm tiềm năng", value: "4", subtitle: "Được AI xác định", trendType: "neutral" as const },
-  { label: "Kênh tốt nhất", value: "TikTok Shop", subtitle: "82% hiệu suất", trend: "+12%", trendType: "up" as const },
-  { label: "Mức độ cạnh tranh", value: "Cao", subtitle: "Bottoms & Streetwear", trendType: "neutral" as const },
-]
+// ─── Display name maps ───────────────────────────────────────────────────────
 
-const MOCK_PRODUCTS = [
-  {
-    name: "Áo Crop Top Linen",
-    badge: "Đang hot",
-    badgeColor: "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-400",
-    trend: 28,
-    insight: "Xu hướng tăng 28% trên TikTok — phù hợp với mùa hè 2026",
-    img: "👕",
-  },
-  {
-    name: "Quần Cargo Baggy",
-    badge: "Đề xuất nhập",
-    badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400",
-    trend: 22,
-    insight: "Streetwear đang bùng nổ Q2 — thị phần còn trống tại Hà Nội",
-    img: "👖",
-  },
-  {
-    name: "Váy Maxi Boho",
-    badge: "Cơ hội mới",
-    badgeColor: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
-    trend: 15,
-    insight: "Chưa khai thác — cạnh tranh thấp, biên lợi nhuận cao hơn 18%",
-    img: "👗",
-  },
-]
+const CHANNEL_NAMES: Record<string, string> = {
+  TIKTOK: "TikTok Shop",
+  SHOPEE: "Shopee Fashion",
+  WEBSITE: "Website Thương hiệu",
+  OFFLINE: "Offline / Cửa hàng",
+  LAZADA: "Lazada",
+}
 
-const MOCK_CHANNELS = [
-  { name: "TikTok Shop", score: 92, growth: 34 },
-  { name: "Shopee Fashion", score: 74, growth: 18 },
-  { name: "Website Thương hiệu", score: 58, growth: 9 },
-  { name: "Offline / Cửa hàng", score: 45, growth: 3 },
-]
+const COMPETITION_LABELS: Record<string, string> = {
+  HIGH: "Cao",
+  MEDIUM: "Trung bình",
+  LOW: "Thấp",
+}
 
-const MOCK_REGIONS = [
-  { name: "Hà Nội", demand: "Rất cao", growth: 28, color: "text-green-600" },
-  { name: "TP. Hồ Chí Minh", demand: "Cao", growth: 18, color: "text-green-500" },
-  { name: "Đà Nẵng", demand: "Trung bình", growth: 12, color: "text-amber-500" },
-  { name: "Cần Thơ", demand: "Đang tăng", growth: 8, color: "text-blue-500" },
-]
+const DEMAND_LABELS: Record<string, string> = {
+  VERY_HIGH: "Rất cao",
+  HIGH: "Cao",
+  MEDIUM: "Trung bình",
+  RISING: "Đang tăng",
+  LOW: "Thấp",
+}
 
-const MOCK_TRENDS = [
-  { name: "Linen & Natural Fabrics", tag: "Vải tự nhiên", growth: 42 },
-  { name: "Oversized Silhouettes", tag: "Dáng rộng", growth: 35 },
-  { name: "Y2K Revival", tag: "Retro", growth: 28 },
-  { name: "Tonal Dressing", tag: "Màu đơn sắc", growth: 21 },
-]
+const DEMAND_COLORS: Record<string, string> = {
+  VERY_HIGH: "text-green-600",
+  HIGH: "text-green-500",
+  MEDIUM: "text-amber-500",
+  RISING: "text-primary",
+  LOW: "text-slate-400",
+}
+
+const REGION_NAMES: Record<string, string> = {
+  hcmc: "TP. Hồ Chí Minh",
+  hanoi: "Hà Nội",
+  danang: "Đà Nẵng",
+  cantho: "Cần Thơ",
+}
+
+const BADGE_CONFIG: Record<string, { label: string; cls: string }> = {
+  HOT: { label: "Đang hot", cls: "bg-pink-100 text-pink-700" },
+  RECOMMEND_IMPORT: { label: "Đề xuất nhập", cls: "bg-indigo-100 text-indigo-700" },
+  NEW_OPPORTUNITY: { label: "Cơ hội mới", cls: "bg-green-100 text-green-700" },
+}
+
+const PRODUCT_EMOJIS = ["👕", "👖", "👗", "🧥", "👟", "👜"]
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function MarketPage() {
   return (
@@ -71,23 +68,66 @@ export default function MarketPage() {
 }
 
 function MarketPageContent() {
+  const { data, isLoading } = useMarketSummary()
+
+  const kpis = [
+    {
+      label: "Điểm cơ hội thị trường",
+      value: isLoading ? "..." : data?.kpis?.opportunityScore != null ? `${data.kpis.opportunityScore}/100` : "—",
+      subtitle: "Chỉ số cơ hội thị trường",
+      trend: data?.kpis?.opportunityScoreDelta ? `+${data.kpis.opportunityScoreDelta} điểm` : undefined,
+      trendType: "up" as const,
+    },
+    {
+      label: "Nhóm sản phẩm tiềm năng",
+      value: isLoading ? "..." : String(data?.kpis?.potentialProductGroups ?? "—"),
+      subtitle: "Được AI xác định",
+      trendType: "neutral" as const,
+    },
+    {
+      label: "Kênh tốt nhất",
+      value: isLoading ? "..." : (data?.kpis?.bestChannel ? CHANNEL_NAMES[data.kpis.bestChannel] ?? data.kpis.bestChannel : "—"),
+      subtitle: data?.kpis?.bestChannelScorePct ? `${data.kpis.bestChannelScorePct}% hiệu suất` : "—",
+      trendType: "up" as const,
+    },
+    {
+      label: "Mức độ cạnh tranh",
+      value: isLoading ? "..." : (data?.kpis?.competitionLevel ? COMPETITION_LABELS[data.kpis.competitionLevel] ?? data.kpis.competitionLevel : "—"),
+      subtitle: data?.kpis?.competitionHotCategories?.join(" & ") ?? "—",
+      trendType: "neutral" as const,
+    },
+  ]
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Cơ hội Thị trường</h1>
+          <p className="text-slate-500 mt-1">Phân tích thị trường thời trang Việt Nam — {currentQuarter()}</p>
+        </div>
+        <LoadingSkeleton rows={4} />
+      </div>
+    )
+  }
+
+  const channels: ChannelOpportunity[] = data?.channelOpportunities ?? []
+  const regions: RegionDemand[] = data?.regionDemand ?? []
+  const trends: TrendHighlight[] = data?.trendHighlights ?? []
+  const products: ProductOpportunity[] = data?.productOpportunities ?? []
+
   return (
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-          Cơ hội Thị trường
-        </h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Cơ hội Thị trường</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Phân tích thị trường thời trang Việt Nam — Q2 2026
+          Phân tích thị trường thời trang Việt Nam — {data?.period ?? currentQuarter()}
         </p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {MOCK_KPIS.map((kpi) => (
-          <KPICard key={kpi.label} {...kpi} />
-        ))}
+        {kpis.map((kpi) => <KPICard key={kpi.label} {...kpi} />)}
       </div>
 
       {/* Product Opportunities */}
@@ -102,37 +142,40 @@ function MarketPageContent() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {MOCK_PRODUCTS.map((product) => (
-            <div
-              key={product.name}
-              className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-soft transition-shadow"
-            >
-              {/* Product image placeholder */}
-              <div className="h-40 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 flex items-center justify-center text-6xl">
-                {product.img}
-              </div>
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold text-slate-900 dark:text-slate-100">{product.name}</h3>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${product.badgeColor}`}>
-                    {product.badge}
-                  </span>
+        {products.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-8 text-center text-slate-400 text-sm">
+            Chưa đủ dữ liệu để xác định cơ hội sản phẩm — tải dữ liệu bán hàng để kích hoạt.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {products.map((product, i) => {
+              const badge = BADGE_CONFIG[product.badge] ?? { label: product.badge, cls: "bg-slate-100 text-slate-600" }
+              return (
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-soft transition-shadow">
+                  <div className="h-40 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 flex items-center justify-center text-6xl">
+                    {PRODUCT_EMOJIS[i % PRODUCT_EMOJIS.length]}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between mb-2 gap-2">
+                      <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm leading-tight">{product.name}</h3>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>{badge.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendIndicator value={product.trendPct} />
+                      <span className="text-xs text-slate-500">so với tháng trước</span>
+                    </div>
+                    {product.insight && (
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{product.insight}</p>
+                    )}
+                    <button className="w-full py-2 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition">
+                      Xem chi tiết
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendIndicator value={product.trend} />
-                  <span className="text-xs text-slate-500 dark:text-slate-400">so với tháng trước</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-                  {product.insight}
-                </p>
-                <button className="w-full py-2 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition">
-                  Xem chi tiết
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Bottom Panels */}
@@ -143,17 +186,23 @@ function MarketPageContent() {
             <span className="material-symbols-outlined text-primary text-[20px]">storefront</span>
             Kênh bán tốt nhất
           </h3>
-          <div className="space-y-3">
-            {MOCK_CHANNELS.map((ch) => (
-              <div key={ch.name}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">{ch.name}</span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{ch.score}/100</span>
+          {channels.length === 0 ? (
+            <p className="text-sm text-slate-400">Chưa có dữ liệu kênh bán</p>
+          ) : (
+            <div className="space-y-3">
+              {channels.map((ch) => (
+                <div key={ch.channel}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {CHANNEL_NAMES[ch.channel] ?? ch.channel}
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{ch.score}/100</span>
+                  </div>
+                  <ProgressBar value={ch.score} />
                 </div>
-                <ProgressBar value={ch.score} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Regions */}
@@ -162,17 +211,25 @@ function MarketPageContent() {
             <span className="material-symbols-outlined text-primary text-[20px]">location_on</span>
             Nhu cầu theo khu vực
           </h3>
-          <div className="space-y-3">
-            {MOCK_REGIONS.map((r) => (
-              <div key={r.name} className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{r.name}</p>
-                  <p className={`text-xs font-semibold ${r.color}`}>{r.demand}</p>
+          {regions.length === 0 ? (
+            <p className="text-sm text-slate-400">Chưa có dữ liệu khu vực</p>
+          ) : (
+            <div className="space-y-3">
+              {regions.map((r) => (
+                <div key={r.region} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {REGION_NAMES[r.region] ?? r.region}
+                    </p>
+                    <p className={`text-xs font-semibold ${DEMAND_COLORS[r.demandLevel] ?? "text-slate-500"}`}>
+                      {DEMAND_LABELS[r.demandLevel] ?? r.demandLevel}
+                    </p>
+                  </div>
+                  <TrendIndicator value={r.growthPct} />
                 </div>
-                <TrendIndicator value={r.growth} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Trends */}
@@ -181,27 +238,36 @@ function MarketPageContent() {
             <span className="material-symbols-outlined text-primary text-[20px]">trending_up</span>
             Xu hướng nổi bật
           </h3>
-          <div className="space-y-3">
-            {MOCK_TRENDS.map((t) => (
-              <div key={t.name} className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.name}</p>
-                  <span className="text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
-                    {t.tag}
-                  </span>
+          {trends.length === 0 ? (
+            <div className="text-sm text-slate-400 space-y-1">
+              <p>Dữ liệu xu hướng đang được cập nhật</p>
+              <p className="text-xs">Tự động làm mới sau 24 giờ</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {trends.map((t) => (
+                <div key={t.name} className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{t.name}</p>
+                    <span className="text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">
+                      {t.tag}
+                    </span>
+                  </div>
+                  <TrendIndicator value={t.growthPct} />
                 </div>
-                <TrendIndicator value={t.growth} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+          {data?.partial && (
+            <p className="text-[11px] text-slate-400 mt-3 border-t border-slate-100 pt-2">
+              ⚡ Dữ liệu Google Trends đang được cập nhật
+            </p>
+          )}
         </div>
       </div>
 
       {/* CTA */}
-      <Link
-        href={ROUTES.HEALTH_CHECK_IMPORT}
-        className="block bg-brand-gradient rounded-2xl p-6 hover:opacity-90 transition"
-      >
+      <Link href={ROUTES.HEALTH_CHECK_IMPORT} className="block bg-brand-gradient rounded-2xl p-6 hover:opacity-90 transition">
         <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
           <span className="material-symbols-outlined text-white text-4xl">monitor_heart</span>
           <div className="text-white flex-1">
@@ -215,4 +281,10 @@ function MarketPageContent() {
       </Link>
     </div>
   )
+}
+
+function currentQuarter() {
+  const now = new Date()
+  const q = Math.floor(now.getMonth() / 3) + 1
+  return `Q${q} ${now.getFullYear()}`
 }

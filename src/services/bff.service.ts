@@ -4,6 +4,7 @@ import type {
   HealthSummaryResponse,
   ForecastSummaryResponse,
   RecommendationsSummaryResponse,
+  MarketSummaryResponse,
 } from "@/types/bff.types"
 
 export const bffService = {
@@ -24,6 +25,13 @@ export const bffService = {
 
   async getRecommendationsSummary(): Promise<RecommendationsSummaryResponse> {
     const { data } = await api.get("/api/v1/dashboard/recommendations-summary")
+    return data
+  },
+
+  async getMarketSummary(location = "hcmc", period?: string): Promise<MarketSummaryResponse> {
+    const params = new URLSearchParams({ location })
+    if (period) params.set("period", period)
+    const { data } = await api.get(`/api/v1/dashboard/market-summary?${params}`)
     return data
   },
 }

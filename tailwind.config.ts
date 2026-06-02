@@ -23,7 +23,9 @@ const config: Config = {
         "bg-dark": "#0f172a",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["Be Vietnam Pro", "sans-serif"],
+        display: ["Space Grotesk", "Be Vietnam Pro", "sans-serif"],
+        mono: ["ui-monospace", "monospace"],
       },
       borderRadius: {
         DEFAULT: "0.25rem",

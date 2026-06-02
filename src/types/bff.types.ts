@@ -81,3 +81,52 @@ export interface RecommendationsSummaryResponse {
   partial: boolean
   lastUpdated: string
 }
+
+export interface MarketKpis {
+  opportunityScore: number | null
+  opportunityScoreDelta: number
+  potentialProductGroups: number
+  bestChannel: string | null
+  bestChannelScorePct: number
+  competitionLevel: string | null
+  competitionHotCategories: string[]
+}
+
+export interface ProductOpportunity {
+  name: string
+  category: string
+  badge: string
+  trendPct: number
+  insight: string | null
+  imageUrl: string | null
+}
+
+export interface ChannelOpportunity {
+  channel: string
+  score: number
+  growthPct: number
+}
+
+export interface RegionDemand {
+  region: string
+  demandLevel: string
+  growthPct: number
+}
+
+export interface TrendHighlight {
+  name: string
+  tag: string
+  growthPct: number
+}
+
+export interface MarketSummaryResponse {
+  period: string
+  location: string
+  kpis: MarketKpis
+  productOpportunities: ProductOpportunity[]
+  channelOpportunities: ChannelOpportunity[]
+  regionDemand: RegionDemand[]
+  trendHighlights: TrendHighlight[]
+  partial: boolean
+  lastUpdated: string
+}

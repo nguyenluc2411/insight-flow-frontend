@@ -29,10 +29,10 @@ export function KPICard({ label, value, subtitle, trend, trendType = "neutral", 
         className
       )}
     >
-      <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
+      <p className="text-[11px] uppercase tracking-[.06em] text-slate-500 dark:text-slate-400 font-semibold leading-none">
         {label}
       </p>
-      <p className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">{value}</p>
+      <p className="font-display text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1.5 tabular-nums">{value}</p>
       {subtitle && (
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
       )}
