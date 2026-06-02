@@ -76,7 +76,7 @@ export default function RegisterPage() {
           </div>
 
           <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-1">
-            Bắt đầu 14 ngày miễn phí
+            Bắt đầu 30 ngày miễn phí
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
             Không cần thẻ tín dụng. Hủy bất kỳ lúc nào.
@@ -277,9 +277,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="bg-white/10 rounded-xl p-4 border border-white/20">
-            <p className="text-sm font-bold mb-1">Miễn phí 14 ngày, không cần thẻ tín dụng</p>
+            <p className="text-sm font-bold mb-1">Miễn phí 30 ngày, không cần thẻ tín dụng</p>
             <p className="text-indigo-200 text-xs">
-              Sau 14 ngày, chọn gói phù hợp hoặc tiếp tục dùng gói Free với tính năng cơ bản.
+              Sau 30 ngày, chọn gói phù hợp hoặc tiếp tục dùng gói Free với tính năng cơ bản.
             </p>
           </div>
         </div>

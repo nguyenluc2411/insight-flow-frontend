@@ -279,7 +279,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[14px] text-green-500">check_circle</span>
-              Miễn phí 14 ngày
+              Miễn phí 30 ngày
             </span>
             <span className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[14px] text-green-500">check_circle</span>
