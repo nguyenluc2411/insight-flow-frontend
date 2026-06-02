@@ -271,8 +271,8 @@ export default function BillingPage() {
               <p className="font-bold text-slate-900 dark:text-slate-100 mb-1">Cần hỗ trợ về thanh toán?</p>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Liên hệ với chúng tôi qua email{" "}
-                <a href="mailto:support@forecastly.ai" className="text-primary font-semibold hover:underline">
-                  support@forecastly.ai
+                <a href="mailto:support@insightflow.ai" className="text-primary font-semibold hover:underline">
+                  support@insightflow.ai
                 </a>{" "}
                 để được tư vấn gói phù hợp hoặc xử lý các vấn đề thanh toán.
               </p>

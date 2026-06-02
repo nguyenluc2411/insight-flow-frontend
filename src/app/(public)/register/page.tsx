@@ -109,7 +109,7 @@ export default function RegisterPage() {
               </label>
               <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
                 <span className="px-3 py-2.5 text-sm text-slate-400 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 select-none">
-                  forecastly.ai/
+                  insightflow.ai/
                 </span>
                 <input
                   {...register("slug")}
@@ -228,6 +228,16 @@ export default function RegisterPage() {
               Đăng nhập
             </Link>
           </p>
+
+          <p className="text-center mt-3">
+            <Link
+              href={ROUTES.HOME}
+              className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 inline-flex items-center gap-1 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[15px]">arrow_back</span>
+              Về trang chủ
+            </Link>
+          </p>
         </div>
 
         {/* Right — Benefits (hidden on mobile) */}
@@ -242,7 +252,7 @@ export default function RegisterPage() {
             </div>
             <p className="text-lg font-bold mb-1">Đã được tin dùng bởi 500+ shop thời trang VN</p>
             <p className="text-indigo-200 text-sm">
-              Từ Hà Nội đến TP.HCM — các shop local brand đang dùng Forecastly để tăng sell-through rate
+              Từ Hà Nội đến TP.HCM — các local brand đang dùng InsightFlow AI để tăng tỷ lệ bán ra
             </p>
           </div>
 

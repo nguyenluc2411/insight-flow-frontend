@@ -162,6 +162,16 @@ export default function LoginPage() {
             Đăng ký miễn phí
           </Link>
         </p>
+
+        <p className="text-center mt-4">
+          <Link
+            href={ROUTES.HOME}
+            className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 inline-flex items-center gap-1 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px]">arrow_back</span>
+            Về trang chủ
+          </Link>
+        </p>
       </div>
     </div>
   )

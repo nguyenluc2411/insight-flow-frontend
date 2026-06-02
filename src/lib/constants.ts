@@ -1,4 +1,4 @@
-export const APP_NAME = "Forecastly"
+export const APP_NAME = "InsightFlow AI"
 export const APP_FULL_NAME = "InsightFlow AI"
 
 export const ROUTES = {

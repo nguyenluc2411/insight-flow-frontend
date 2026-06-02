@@ -77,7 +77,7 @@ export default function ProfilePage() {
               <p className="font-bold text-slate-900 dark:text-slate-100">{user?.fullName ?? "—"}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
               {tenant && (
-                <p className="text-xs text-primary font-medium mt-0.5">{tenant.slug}.forecastly.ai</p>
+                <p className="text-xs text-primary font-medium mt-0.5">{tenant.slug}.insightflow.ai</p>
               )}
             </div>
           </div>

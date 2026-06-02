@@ -125,7 +125,7 @@ export default function LandingPage() {
                 <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                <span className="ml-2 text-xs text-slate-400">Forecastly Dashboard</span>
+                <span className="ml-2 text-xs text-slate-400">InsightFlow AI</span>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {[
