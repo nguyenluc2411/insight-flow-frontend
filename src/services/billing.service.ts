@@ -1,5 +1,5 @@
 import api from "@/lib/axios"
-import type { Package, Subscription, UsageStatus, UpgradeRequestResult } from "@/types/billing.types"
+import type { Package, Subscription, UsageStatus, UpgradeRequestResult, CheckoutInfo } from "@/types/billing.types"
 
 export const billingService = {
   async getPackages(): Promise<Package[]> {
@@ -17,8 +17,18 @@ export const billingService = {
     return data
   },
 
-  // MVP manual-payment model: this submits a request that an admin approves.
-  // It does NOT change the plan immediately.
+  // SePay checkout: returns a dynamic VietQR. After the customer transfers, SePay's
+  // webhook auto-upgrades the plan — no admin step. Poll getCurrentSubscription to detect it.
+  async createCheckout(packageCode: string, billingCycle = "MONTHLY"): Promise<CheckoutInfo> {
+    const { data } = await api.post("/api/v1/billing/checkout", {
+      packageCode,
+      billingCycle,
+    })
+    return data
+  },
+
+  // Legacy manual-payment model: submits a request that an admin approves.
+  // Kept as a fallback; the primary flow is createCheckout (auto-upgrade on payment).
   async requestUpgrade(packageCode: string, billingCycle = "MONTHLY"): Promise<UpgradeRequestResult> {
     const { data } = await api.post("/api/v1/billing/subscriptions/upgrade-request", {
       packageCode,
@@ -28,4 +38,4 @@ export const billingService = {
   },
 }
 
-export type { Package, Subscription, UsageStatus, UpgradeRequestResult }
+export type { Package, Subscription, UsageStatus, UpgradeRequestResult, CheckoutInfo }

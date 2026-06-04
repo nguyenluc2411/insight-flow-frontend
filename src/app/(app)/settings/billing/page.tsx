@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react"
 import { useAuthStore } from "@/stores/auth.store"
 import { billingService } from "@/services/billing.service"
-import type { Package, Subscription, UsageStatus } from "@/types/billing.types"
+import type { Package, Subscription, UsageStatus, CheckoutInfo } from "@/types/billing.types"
 import { useToast } from "@/hooks/use-toast"
 import { parseApiError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
+import { PaymentQrDialog } from "@/components/billing/PaymentQrDialog"
 
 const FEATURE_LABELS: Record<string, string> = {
   DEMAND_FORECAST: "Dự báo nhu cầu AI",
@@ -42,7 +43,9 @@ export default function BillingPage() {
   const [usage, setUsage] = useState<UsageStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [upgradingCode, setUpgradingCode] = useState<string | null>(null)
-  const [requestedCode, setRequestedCode] = useState<string | null>(null)
+  const [checkout, setCheckout] = useState<CheckoutInfo | null>(null)
+  const [payOpen, setPayOpen] = useState(false)
+  const [payTarget, setPayTarget] = useState<{ name: string; planId: string } | null>(null)
 
   async function loadData() {
     setLoading(true)
@@ -77,16 +80,14 @@ export default function BillingPage() {
     if (!plan) return
     setUpgradingCode(pkg.code)
     try {
-      await billingService.requestUpgrade(pkg.code, plan.billingCycle)
-      setRequestedCode(pkg.code)
-      toast({
-        title: "Đã gửi yêu cầu",
-        description: `Yêu cầu nâng cấp gói ${pkg.name} đã được gửi. Đội ngũ sẽ liên hệ xác nhận thanh toán và kích hoạt.`,
-      })
+      const info = await billingService.createCheckout(pkg.code, plan.billingCycle)
+      setCheckout(info)
+      setPayTarget({ name: pkg.name, planId: plan.id })
+      setPayOpen(true)
     } catch (err: unknown) {
       toast({
-        title: "Lỗi gửi yêu cầu",
-        description: parseApiError(err, "Không thể gửi yêu cầu. Vui lòng thử lại."),
+        title: "Lỗi tạo thanh toán",
+        description: parseApiError(err, "Không thể tạo mã thanh toán. Vui lòng thử lại."),
         variant: "destructive",
       })
     } finally {
@@ -112,9 +113,9 @@ export default function BillingPage() {
       <div className="space-y-6">
         {/* Current Plan Summary */}
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gói hiện tại</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Gói hiện tại</p>
               {currentPkgCode === "TRIAL" ? (
                 <div>
                   <div className="flex items-center gap-3">
@@ -149,14 +150,26 @@ export default function BillingPage() {
                 </p>
               )}
             </div>
+            {["BASIC", "ADVANCED", "PRO"].includes(currentPkgCode) && (
+              <div className="text-right shrink-0">
+                {subscription?.endDate && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">
+                    Gia hạn {new Date(subscription.endDate).toLocaleDateString("vi-VN")}
+                  </p>
+                )}
+                <button className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:border-primary/50 hover:text-primary transition">
+                  Quản lý thanh toán
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Usage stats */}
           {usage && (
             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <UsageStat label="API calls hôm nay" value={usage.apiCallsCount} max={usage.maxApiCallsPerDay} />
-              <UsageStat label="Báo cáo" value={usage.reportsGeneratedCount} />
-              <UsageStat label="Dự báo" value={usage.forecastsExecutedCount} />
+              <UsageStat label="Lượt gọi API hôm nay" value={usage.apiCallsCount} max={usage.maxApiCallsPerDay} />
+              <UsageStat label="Báo cáo đã tạo" value={usage.reportsGeneratedCount} />
+              <UsageStat label="Lượt dự báo" value={usage.forecastsExecutedCount} />
               <UsageStat
                 label="Lưu trữ (GB)"
                 value={Math.round((usage.storageUsedBytes / 1_073_741_824) * 100) / 100}
@@ -229,35 +242,24 @@ export default function BillingPage() {
                   ))}
                 </ul>
 
-                {(() => {
-                  const isRequested = requestedCode === pkg.code
-                  return (
-                    <button
-                      disabled={isCurrent || isUpgrading || isRequested}
-                      onClick={() => handleUpgrade(pkg)}
-                      className={cn(
-                        "w-full py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2",
-                        isCurrent || isRequested
-                          ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-default"
-                          : highlight
-                          ? "bg-brand-gradient text-white hover:opacity-90"
-                          : "border-2 border-primary text-primary hover:bg-primary/5",
-                        isUpgrading && "opacity-60"
-                      )}
-                    >
-                      {isUpgrading && (
-                        <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-                      )}
-                      {isCurrent
-                        ? "Gói hiện tại"
-                        : isRequested
-                        ? "Đã gửi yêu cầu — chờ duyệt"
-                        : isUpgrading
-                        ? "Đang gửi..."
-                        : `Chọn gói ${pkg.name}`}
-                    </button>
-                  )
-                })()}
+                <button
+                  disabled={isCurrent || isUpgrading}
+                  onClick={() => handleUpgrade(pkg)}
+                  className={cn(
+                    "w-full py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2",
+                    isCurrent
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-default"
+                      : highlight
+                      ? "bg-brand-gradient text-white hover:opacity-90"
+                      : "border-2 border-primary text-primary hover:bg-primary/5",
+                    isUpgrading && "opacity-60"
+                  )}
+                >
+                  {isUpgrading && (
+                    <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                  )}
+                  {isCurrent ? "Gói hiện tại" : isUpgrading ? "Đang tạo mã..." : `Nâng cấp gói ${pkg.name}`}
+                </button>
               </div>
             )
           })}
@@ -280,6 +282,15 @@ export default function BillingPage() {
           </div>
         </div>
       </div>
+
+      <PaymentQrDialog
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        checkout={checkout}
+        packageName={payTarget?.name ?? ""}
+        targetPlanId={payTarget?.planId ?? null}
+        onSuccess={loadData}
+      />
     </div>
   )
 }

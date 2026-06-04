@@ -58,3 +58,15 @@ export interface UpgradeRequestResult {
   resolvedAt: string | null
   createdAt: string
 }
+
+// SePay dynamic-QR checkout. The plan auto-upgrades once SePay's webhook confirms
+// the transfer (matched by `content` = IFLOWxxxxxx), so the UI just polls the
+// subscription until the plan changes.
+export interface CheckoutInfo {
+  qrUrl: string
+  amount: number
+  content: string
+  bankId: string
+  accountNo: string
+  accountName: string
+}
