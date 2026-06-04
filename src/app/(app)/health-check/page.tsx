@@ -12,6 +12,7 @@ import { ROUTES } from "@/lib/constants"
 import { useHealthCheck } from "@/hooks/useHealthCheck"
 import { useInventorySummary, useCategories } from "@/hooks/useCatalog"
 import { useRecommendations } from "@/hooks/useRecommendations"
+import { getForecastPeriod } from "@/lib/utils"
 
 export default function HealthCheckPage() {
   const { data: health, isLoading } = useHealthCheck()
@@ -30,7 +31,7 @@ export default function HealthCheckPage() {
   // Map ML clearance recommendations → RiskItemTable format
   const riskItems = (clearanceData?.items ?? []).map((item) => ({
     sku: item.variantId.slice(0, 8) + "…",
-    name: item.reason ?? `Variant ${item.variantId.slice(-6)}`,
+    name: item.reason ?? `Mã hàng ${item.variantId.slice(-6)}`,
     stock: item.currentStock ?? 0,
     sellThrough: item.salesVelocity30d != null && (item.currentStock ?? 0) > 0
       ? Math.min(99, Math.round((item.salesVelocity30d * 30) / ((item.currentStock ?? 1) + item.salesVelocity30d * 30) * 100))
@@ -42,35 +43,35 @@ export default function HealthCheckPage() {
   const dynamicIssues = [
     ...(slowSKU > 0 ? [{
       icon: "inventory_2",
-      title: `${slowSKU} SKU chậm bán cần xử lý`,
-      description: `Áp lực tồn kho ${pressurePct.toFixed(0)}% — ưu tiên clearance hoặc chuyển kênh`,
+      title: `${slowSKU} mã hàng chậm bán cần xử lý`,
+      description: `Áp lực tồn kho ${pressurePct.toFixed(0)}% — ưu tiên thanh lý hoặc chuyển kênh`,
       severity: (pressurePct > 50 ? "NGHIÊM TRỌNG" : "QUAN TRỌNG") as "NGHIÊM TRỌNG" | "QUAN TRỌNG" | "CHIẾN LƯỢC",
     }] : []),
     ...(lowStock > 0 ? [{
       icon: "warning",
-      title: `${lowStock} SKU dưới ngưỡng tái đặt hàng`,
-      description: "Cần nhập thêm hàng để tránh stockout trong 7-14 ngày tới",
+      title: `${lowStock} mã hàng dưới ngưỡng tái đặt hàng`,
+      description: "Cần nhập thêm hàng để tránh hết hàng trong 7-14 ngày tới",
       severity: "QUAN TRỌNG" as const,
     }] : []),
     ...((clearanceData?.items ?? []).length > 0 ? [{
       icon: "sell",
       title: `${clearanceData!.items.length} mã hàng cần thanh lý`,
-      description: "AI phát hiện hàng tồn lâu ngày — xem bảng SKU cần xử lý bên dưới",
+      description: "AI phát hiện hàng tồn lâu ngày — xem bảng mã hàng cần xử lý bên dưới",
       severity: "CHIẾN LƯỢC" as const,
     }] : []),
   ]
 
   // Dynamic AI insights from real data
   const aiInsights = [
-    ...(slowSKU > 0 ? [`${slowSKU} SKU chậm bán — cần hành động trong 30 ngày`] : []),
+    ...(slowSKU > 0 ? [`${slowSKU} mã hàng chậm bán — cần hành động trong 30 ngày`] : []),
     ...(pressurePct > 30 ? [`Áp lực tồn kho ${pressurePct.toFixed(0)}% vượt ngưỡng bình thường`] : []),
-    ...(lowStock > 0 ? [`${lowStock} vị trí tồn kho dưới ngưỡng reorder — nguy cơ stockout`] : []),
+    ...(lowStock > 0 ? [`${lowStock} vị trí tồn kho dưới ngưỡng đặt lại hàng — nguy cơ hết hàng`] : []),
     "Kết nối POS để nhận phân tích chi tiết hơn theo từng kênh bán",
   ]
 
   const kpis = [
     {
-      label: "Tổng SKU",
+      label: "Tổng mã hàng",
       value: loading ? "..." : String(totalSKU),
       subtitle: `${totalQty.toLocaleString("vi-VN")} đơn vị tồn kho`,
       trendType: "neutral" as const,
@@ -78,19 +79,19 @@ export default function HealthCheckPage() {
     {
       label: "Áp lực tồn kho",
       value: loading ? "..." : `${pressurePct.toFixed(0)}%`,
-      subtitle: "tỷ lệ tồn kho so với capacity",
+      subtitle: "tỷ lệ tồn kho so với sức chứa",
       trendType: pressurePct > 60 ? ("down" as const) : ("neutral" as const),
     },
     {
-      label: "SKU thiếu hàng",
+      label: "Mã hàng sắp hết",
       value: loading ? "..." : String(lowStock),
-      subtitle: `${slowSKU} SKU chậm bán cần xử lý`,
+      subtitle: `${slowSKU} mã hàng chậm bán cần xử lý`,
       trendType: lowStock > 0 ? ("down" as const) : ("neutral" as const),
     },
     {
-      label: "Tỷ lệ sell-through",
+      label: "Tỷ lệ bán ra",
       value: loading ? "..." : (sellThrough > 0 ? `${sellThrough.toFixed(0)}%` : "—"),
-      subtitle: "từ BFF · cần dữ liệu bán hàng",
+      subtitle: "cần dữ liệu bán hàng để tính toán",
       trendType: sellThrough > 0 && sellThrough < 40 ? ("down" as const) : ("neutral" as const),
     },
   ]
@@ -125,7 +126,7 @@ export default function HealthCheckPage() {
           </h1>
         </div>
         <div className="text-right text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
-          <p>Tổng SKU: <span className="font-semibold">{loading ? "..." : totalSKU}</span></p>
+          <p>Tổng mã hàng: <span className="font-semibold">{loading ? "..." : totalSKU}</span></p>
           <p>Thiếu hàng: <span className="font-semibold text-amber-500">{loading ? "..." : lowStock}</span></p>
           {health?.lastUpdated && (
             <p>Cập nhật: {new Date(health.lastUpdated).toLocaleTimeString("vi-VN")}</p>
@@ -160,16 +161,16 @@ export default function HealthCheckPage() {
             {/* Risk Item Table — real ML clearance data */}
             <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
-                SKU cần xử lý
+                Mã hàng cần xử lý
                 {riskItems.length > 0 && (
-                  <span className="ml-2 text-xs font-normal text-primary">({riskItems.length} từ ML)</span>
+                  <span className="ml-2 text-xs font-normal text-primary">({riskItems.length} mã hàng từ AI)</span>
                 )}
               </h2>
               {riskItems.length > 0 ? (
                 <RiskItemTable items={riskItems} />
               ) : (
                 <p className="text-sm text-slate-500 dark:text-slate-400 py-4 text-center">
-                  Chưa có SKU nào cần clearance — tải dữ liệu bán hàng để AI phân tích.
+                  Chưa có mã hàng nào cần thanh lý — tải dữ liệu bán hàng để AI phân tích.
                 </p>
               )}
             </div>
@@ -208,7 +209,7 @@ export default function HealthCheckPage() {
                 </p>
               </div>
               <p className="text-xs text-green-700 dark:text-green-300">
-                Đề xuất hành động và dự báo Q2 2026 đã sẵn sàng
+                Đề xuất hành động và dự báo {getForecastPeriod()} đã sẵn sàng
               </p>
             </div>
           </div>
@@ -233,8 +234,8 @@ export default function HealthCheckPage() {
         >
           <span className="material-symbols-outlined text-primary text-3xl">insights</span>
           <div>
-            <p className="font-bold text-slate-900 dark:text-slate-100">Xem Dự báo Q2</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Xu hướng sản phẩm 2026</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100">Xem Dự báo {getForecastPeriod()}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Xu hướng sản phẩm thời trang</p>
           </div>
         </Link>
       </div>

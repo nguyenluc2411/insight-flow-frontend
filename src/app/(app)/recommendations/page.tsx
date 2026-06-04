@@ -12,6 +12,7 @@ import { useRecommendations, useRecommendationsSummary, useRefreshRecommendation
 import { ACTION_LABELS } from "@/lib/constants"
 import { FeatureGate } from "@/components/feature/FeatureGate"
 import { useToast } from "@/hooks/use-toast"
+import { getForecastPeriod } from "@/lib/utils"
 import type { TopAction } from "@/types/bff.types"
 
 // Action type → icon mapping
@@ -38,24 +39,24 @@ const PRIORITY_LABEL: Record<string, string> = {
 const CONFIDENCE_FROM_PRIORITY: Record<string, number> = { HIGH: 90, MEDIUM: 75, LOW: 60 }
 
 const AI_LOGIC_RULES = [
-  "Ưu tiên hành động nếu sell-through <30% và tuổi tồn kho >45 ngày",
-  "Chuyển kho nếu khu vực hiện tại có demand thấp hơn khu vực khác >20%",
-  "Markdown 10-15% nếu còn >60 ngày đến cuối mùa và sell-through <40%",
-  "Đề xuất nhập thêm nếu sell-through >75% và stock-out risk >60%",
+  "Ưu tiên hành động nếu tỷ lệ bán ra <30% và tuổi tồn kho >45 ngày",
+  "Chuyển kho nếu khu vực hiện tại có nhu cầu thấp hơn khu vực khác >20%",
+  "Giảm giá 10-15% nếu còn >60 ngày đến cuối mùa và tỷ lệ bán ra <40%",
+  "Đề xuất nhập thêm nếu tỷ lệ bán ra >75% và nguy cơ hết hàng >60%",
 ]
 
 function buildTopActionCard(item: TopAction) {
   const impact = item.action === "CLEARANCE" && item.suggestedDiscountPct
     ? `Đề xuất giảm ${item.suggestedDiscountPct}% — thoát ${item.currentStock ?? "?"} đv tồn`
     : item.action === "RESTOCK" && item.suggestedRestockQty
-    ? `Nhập thêm ${item.suggestedRestockQty} đv để tránh stockout`
+    ? `Nhập thêm ${item.suggestedRestockQty} đv để tránh hết hàng`
     : item.reason ?? "Xem chi tiết tại bảng đề xuất"
 
   return {
     priority: PRIORITY_LABEL[item.priority] ?? item.priority,
     priorityColor: PRIORITY_COLOR[item.priority] ?? PRIORITY_COLOR.LOW,
     icon: ACTION_ICONS[item.action] ?? "recommend",
-    title: `${ACTION_LABELS[item.action] ?? item.action} — Variant ${item.variantId.slice(-6)}`,
+    title: `${ACTION_LABELS[item.action] ?? item.action} — Mã hàng ${item.variantId.slice(-6)}`,
     description: item.reason ?? "Phân tích dựa trên dữ liệu bán hàng và tồn kho hiện tại",
     impact,
     confidence: CONFIDENCE_FROM_PRIORITY[item.priority] ?? 70,
@@ -91,19 +92,19 @@ function RecommendationsPageContent() {
     {
       label: "Cần thanh lý",
       value: isLoading ? "..." : String(impact?.clearanceItems ?? 0),
-      subtitle: "SKU cần clearance",
+      subtitle: "mã hàng cần thanh lý",
       trendType: (impact?.clearanceItems ?? 0) > 0 ? ("down" as const) : ("neutral" as const),
     },
     {
       label: "Cần nhập thêm",
       value: isLoading ? "..." : String(impact?.restockItems ?? 0),
-      subtitle: "SKU cần restock",
+      subtitle: "mã hàng cần nhập thêm",
       trendType: (impact?.restockItems ?? 0) > 0 ? ("up" as const) : ("neutral" as const),
     },
     {
       label: "Giảm giá đề xuất",
       value: isLoading ? "..." : (impact?.avgDiscountPct ? `${impact.avgDiscountPct}%` : "—"),
-      subtitle: "trung bình cho clearance",
+      subtitle: "trung bình cho hàng thanh lý",
       trendType: "neutral" as const,
     },
   ]
@@ -215,7 +216,7 @@ function RecommendationsPageContent() {
             items={[
               "Phân tích tồn kho và dữ liệu bán hàng thực tế của shop",
               "So sánh với xu hướng thị trường thời trang Việt Nam",
-              "Áp dụng quy tắc rule-based theo Phase 1 — tồn lâu, sell-through thấp",
+              "Áp dụng quy tắc theo Giai đoạn 1 — tồn lâu, tỷ lệ bán ra thấp",
             ]}
             variant="purple"
           />
@@ -227,8 +228,8 @@ function RecommendationsPageContent() {
             </p>
             <div className="space-y-3">
               {[
-                { label: "SKU clearance", before: impact?.clearanceItems ?? 0, after: 0, pct: 100 },
-                { label: "SKU restock", before: 0, after: impact?.restockItems ?? 0, pct: Math.min(100, (impact?.restockItems ?? 0) * 10) },
+                { label: "Mã hàng thanh lý", before: impact?.clearanceItems ?? 0, after: 0, pct: 100 },
+                { label: "Mã hàng nhập thêm", before: 0, after: impact?.restockItems ?? 0, pct: Math.min(100, (impact?.restockItems ?? 0) * 10) },
               ].map((sim) => (
                 <div key={sim.label}>
                   <div className="flex justify-between text-xs mb-1">
@@ -259,8 +260,8 @@ function RecommendationsPageContent() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800">
-                  {["SKU", "Danh mục", "Hành động", "Lý do", "Ưu tiên", "Tin cậy"].map((h) => (
-                    <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4">
+                  {["Mã hàng", "Danh mục", "Hành động", "Lý do", "Ưu tiên", "Tin cậy"].map((h) => (
+                    <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 tracking-wider pr-4">
                       {h}
                     </th>
                   ))}
@@ -353,7 +354,7 @@ function RecommendationsPageContent() {
           <span className="material-symbols-outlined text-primary text-2xl">insights</span>
           <div>
             <p className="font-bold text-slate-900 dark:text-slate-100">Xem dự báo xu hướng</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Xu hướng sản phẩm Q2 2026</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Xu hướng sản phẩm {getForecastPeriod()}</p>
           </div>
         </Link>
       </div>

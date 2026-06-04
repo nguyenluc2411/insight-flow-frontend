@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   const kpis = [
     {
-      label: "Tổng SKU",
+      label: "Tổng mã hàng",
       value: isLoading ? "..." : String(totalSKU),
       subtitle: "sản phẩm đang theo dõi",
       trendType: "neutral" as const,
@@ -31,7 +31,7 @@ export default function DashboardPage() {
     {
       label: "Thiếu hàng",
       value: isLoading ? "..." : String(lowStockCount),
-      subtitle: "SKU dưới ngưỡng reorder",
+      subtitle: "mã hàng dưới ngưỡng đặt lại hàng",
       trendType: lowStockCount > 0 ? ("down" as const) : ("neutral" as const),
     },
     {
@@ -42,8 +42,8 @@ export default function DashboardPage() {
     },
     {
       label: "Gói dịch vụ",
-      value: tenant?.plan ?? "trial",
-      subtitle: "plan hiện tại",
+      value: tenant?.plan ? tenant.plan.toUpperCase() : "TRIAL",
+      subtitle: "gói đang sử dụng",
       trendType: "neutral" as const,
     },
   ]
@@ -67,42 +67,15 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* CTA Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Link
-          href={ROUTES.HEALTH_CHECK}
-          className="group bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 shadow-soft hover:border-primary/50 transition-all"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors">
-              <span className="material-symbols-outlined text-primary group-hover:text-white transition-colors">monitor_heart</span>
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 dark:text-slate-100">Kiểm tra Sức khỏe</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Xem báo cáo chẩn đoán tồn kho và rủi ro kênh bán hàng
-              </p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href={ROUTES.RECOMMENDATIONS}
-          className="group bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 shadow-soft hover:border-primary/50 transition-all"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center shrink-0 group-hover:bg-secondary transition-colors">
-              <span className="material-symbols-outlined text-secondary group-hover:text-white transition-colors">recommend</span>
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 dark:text-slate-100">Đề xuất AI</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Hành động ưu tiên để tối ưu tồn kho và tăng doanh thu
-              </p>
-            </div>
-          </div>
-        </Link>
-      </div>
+      {/* ML status indicator */}
+      {!isLoading && mlOnline === false && (
+        <div className="mb-6 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-xl p-4 flex items-center gap-3">
+          <span className="material-symbols-outlined text-amber-500 text-xl shrink-0">warning</span>
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            Dịch vụ AI đang tạm thời không khả dụng — dữ liệu hiển thị có thể chưa được cập nhật.
+          </p>
+        </div>
+      )}
 
       {/* Empty state — shown when no data yet */}
       {!isLoading && !hasData && (

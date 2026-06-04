@@ -104,7 +104,7 @@ export const BUSINESS_SCALES = [
 ]
 
 export const LOCATIONS = [
-  { id: "hcmc", label: "TP. Hồ Chí Minh", sub: "Ho Chi Minh City" },
-  { id: "hanoi", label: "Hà Nội", sub: "Hanoi" },
-  { id: "danang", label: "Đà Nẵng", sub: "Da Nang" },
+  { id: "hcmc", label: "TP. Hồ Chí Minh", sub: "Miền Nam" },
+  { id: "hanoi", label: "Hà Nội", sub: "Miền Bắc" },
+  { id: "danang", label: "Đà Nẵng", sub: "Miền Trung" },
 ]

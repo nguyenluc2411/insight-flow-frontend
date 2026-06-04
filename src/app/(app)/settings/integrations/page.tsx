@@ -6,6 +6,7 @@ import { integrationService, type ConnectorConfigResponse, type ConnectorType } 
 import { useAuthStore } from "@/stores/auth.store"
 import { useToast } from "@/hooks/use-toast"
 import { parseApiError } from "@/lib/errors"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 
 const CONNECTOR_META: Record<ConnectorType, {
@@ -30,7 +31,7 @@ const CONNECTOR_META: Record<ConnectorType, {
     icon: "language",
     color: "text-green-600 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-950",
-    desc: "Tích hợp với Haravan — sẽ ra mắt trong Q3 2026",
+    desc: "Tích hợp với Haravan — sắp ra mắt.",
   },
 }
 
@@ -38,6 +39,12 @@ const STATUS_BADGE: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
   INACTIVE: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
   ERROR: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Đang hoạt động",
+  INACTIVE: "Không hoạt động",
+  ERROR: "Lỗi kết nối",
 }
 
 function ConnectorCard({ connector, onSync, onDelete, isSyncing }: {
@@ -61,7 +68,7 @@ function ConnectorCard({ connector, onSync, onDelete, isSyncing }: {
               {connector.name ?? connector.connectorType}
             </p>
             <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${statusClass}`}>
-              {connector.status}
+              {STATUS_LABELS[connector.status] ?? connector.status}
             </span>
           </div>
         </div>
@@ -155,7 +162,7 @@ export default function IntegrationsPage() {
       ) : connectors.length > 0 ? (
         <div className="mb-8">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">Đang kết nối</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className={cn("grid gap-5", connectors.length === 1 ? "grid-cols-1 max-w-xl" : "grid-cols-1 md:grid-cols-2")}>
             {connectors.map((connector) => (
               <ConnectorCard
                 key={connector.id}

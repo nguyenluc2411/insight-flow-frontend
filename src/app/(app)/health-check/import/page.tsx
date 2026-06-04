@@ -16,7 +16,7 @@ const FORMAT_CARDS = [
     ext: "CSV",
     icon: "table_chart",
     color: "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950",
-    desc: "Export từ KiotViet, Sapo, Shopee",
+    desc: "Xuất từ KiotViet, Sapo, Shopee",
   },
   {
     ext: "XLSX",
@@ -28,12 +28,12 @@ const FORMAT_CARDS = [
     ext: "JSON",
     icon: "data_object",
     color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950",
-    desc: "API export / hệ thống ERP",
+    desc: "Xuất từ API / hệ thống ERP",
   },
 ]
 
 const REQUIRED_FIELDS = [
-  { name: "product_id", desc: "Mã SKU sản phẩm" },
+  { name: "product_id", desc: "Mã sản phẩm" },
   { name: "product_name", desc: "Tên sản phẩm" },
   { name: "category", desc: "Danh mục" },
   { name: "quantity_sold", desc: "Số lượng đã bán" },
@@ -205,7 +205,7 @@ export default function ImportPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">Kết nối KiotViet / Sapo</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tự động đồng bộ, không cần upload file</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tự động đồng bộ, không cần tải file</p>
             </div>
             <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[18px]">arrow_forward</span>
           </Link>

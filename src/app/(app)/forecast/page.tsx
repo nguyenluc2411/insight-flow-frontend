@@ -10,12 +10,13 @@ import { useForecastSummary } from "@/hooks/useForecast"
 import { useCategories } from "@/hooks/useCatalog"
 import { useRecommendations } from "@/hooks/useRecommendations"
 import { FeatureGate } from "@/components/feature/FeatureGate"
+import { getForecastPeriod } from "@/lib/utils"
 
 const AI_STRATEGY_ITEMS = [
-  "Tập trung vào Linen và Natural Fabrics — đây là meta của H2 2026",
-  "TikTok Shop là kênh chính — ưu tiên sản phẩm có khả năng viral",
-  "Đa dạng hóa khu vực — Hà Nội đang underserved về Bottoms trendy",
-  "Giảm phụ thuộc Formal wear — chuyển sang Casual/Streetwear",
+  "Tập trung Vải Lanh và Sợi Tự Nhiên — xu hướng chủ đạo nửa cuối năm nay.",
+  "TikTok Shop là kênh chính — ưu tiên sản phẩm có khả năng lan truyền mạnh.",
+  "Đa dạng hóa khu vực — Hà Nội đang chưa được khai thác mảng Quần hợp xu hướng.",
+  "Giảm phụ thuộc trang phục công sở — chuyển sang đồ thường ngày/Streetwear.",
 ]
 
 const TREND_COLOR = {
@@ -42,7 +43,7 @@ function ForecastPageContent() {
   // Map ML clearance recommendations → avoid-products table format
   const avoidProducts = (clearanceData?.items ?? []).map((item) => ({
     sku: item.variantId.slice(0, 8) + "…",
-    name: `Variant ${item.variantId.slice(-6)}`,
+    name: `Mã hàng ${item.variantId.slice(-6)}`,
     category: "—",
     reason: item.reason ?? "Nhu cầu thấp / tồn lâu ngày",
     risk: item.priority as "HIGH" | "MEDIUM" | "LOW",
@@ -65,7 +66,7 @@ function ForecastPageContent() {
       trendType: "up" as const,
     },
     {
-      label: "SKU ưu tiên nhập",
+      label: "Mã hàng ưu tiên nhập",
       value: isLoading ? "..." : String(topProducts.length),
       subtitle: "sản phẩm được đề xuất",
       trendType: "neutral" as const,
@@ -92,12 +93,12 @@ function ForecastPageContent() {
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <StatusBadge status="ready" />
             <span className="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 text-[11px] font-bold rounded-full border border-indigo-200 dark:border-indigo-900 uppercase tracking-wider">
-              Kỳ dự báo Q2 2026
+              Kỳ dự báo {getForecastPeriod()}
             </span>
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Dự báo Xu hướng</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Phân tích xu hướng sản phẩm thời trang Q2 2026
+            Phân tích xu hướng sản phẩm thời trang {getForecastPeriod()}
           </p>
         </div>
         {confidence > 0 && <ConfidenceBadge value={confidence} />}
@@ -167,7 +168,7 @@ function ForecastPageContent() {
       {topProducts.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
-            Sản phẩm ưu tiên kỳ tới
+            Sản phẩm ưu tiên nhập kỳ tới
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {topProducts.map((p) => (
@@ -195,7 +196,7 @@ function ForecastPageContent() {
         <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">
           Sản phẩm không nên nhập thêm
           {avoidProducts.length > 0 && (
-            <span className="ml-2 text-xs font-normal text-primary">({avoidProducts.length} từ ML)</span>
+            <span className="ml-2 text-xs font-normal text-primary">({avoidProducts.length} từ AI)</span>
           )}
         </h2>
         {avoidProducts.length > 0 ? (
@@ -203,8 +204,8 @@ function ForecastPageContent() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800">
-                  {["SKU", "Variant ID", "Danh mục", "Lý do AI", "Rủi ro"].map((h) => (
-                    <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider pr-4">
+                  {["Mã hàng", "Tên sản phẩm", "Danh mục", "Lý do không nhập", "Mức rủi ro"].map((h) => (
+                    <th key={h} className="text-left pb-3 text-xs font-semibold text-slate-500 tracking-wider pr-4">
                       {h}
                     </th>
                   ))}
@@ -231,7 +232,7 @@ function ForecastPageContent() {
       </div>
 
       {/* AI Strategy Box */}
-      <AIInsightBox title="Chiến lược AI cho Q2 2026" items={AI_STRATEGY_ITEMS} variant="dark" />
+      <AIInsightBox title={`Chiến lược AI cho ${getForecastPeriod()}`} items={AI_STRATEGY_ITEMS} variant="dark" />
     </div>
   )
 }

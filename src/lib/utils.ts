@@ -29,3 +29,9 @@ export function formatDate(date: string | Date): string {
 export function truncate(str: string, length: number): string {
   return str.length > length ? `${str.substring(0, length)}...` : str
 }
+
+export function getForecastPeriod(): string {
+  const now = new Date()
+  const q = Math.ceil((now.getMonth() + 1) / 3)
+  return `Q${q} ${now.getFullYear()}`
+}

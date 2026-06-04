@@ -4,7 +4,7 @@ import { LandingPricing } from "@/components/landing/LandingPricing"
 import { Logo } from "@/components/common/Logo"
 
 const PROBLEMS = [
-  { icon: "inventory_2", title: "Tồn kho quá mức", desc: "Vốn bị chôn vùi trong hàng không bán được, phải markdown giảm giá mạnh cuối mùa" },
+  { icon: "inventory_2", title: "Tồn kho quá mức", desc: "Vốn bị chôn vùi trong hàng không bán được, phải giảm giá mạnh cuối mùa" },
   { icon: "trending_down", title: "Dự báo không chính xác", desc: "Không biết sản phẩm nào sẽ hot, nhập quá ít hoặc quá nhiều so với nhu cầu thực tế" },
   { icon: "warning", title: "Quyết định không có dữ liệu", desc: "Đang ra quyết định nhập hàng dựa trên cảm tính thay vì dữ liệu thị trường" },
 ]
@@ -12,12 +12,12 @@ const PROBLEMS = [
 const SOLUTIONS = [
   { icon: "auto_awesome", title: "AI phân tích 10,000+ điểm dữ liệu", desc: "Phân tích xu hướng TikTok, Shopee, dữ liệu bán hàng của bạn và 500+ shop tương tự" },
   { icon: "insights", title: "Dự báo chính xác 89%", desc: "Biết trước 3 tháng nào nên nhập gì, bao nhiêu, bán ở kênh nào" },
-  { icon: "recommend", title: "Đề xuất hành động cụ thể", desc: "Không chỉ báo cáo — AI đề xuất chính xác: chuyển kho đâu, markdown bao nhiêu, nhập gì thêm" },
+  { icon: "recommend", title: "Đề xuất hành động cụ thể", desc: "Không chỉ báo cáo — AI đề xuất chính xác: chuyển kho đâu, giảm giá bao nhiêu, nhập gì thêm" },
 ]
 
 const STEPS = [
   { num: 1, icon: "account_circle", title: "Tạo hồ sơ Shop", desc: "Cho AI biết bạn đang bán gì, ở đâu, quy mô như thế nào — mất 2 phút" },
-  { num: 2, icon: "upload_file", title: "Tích hợp dữ liệu", desc: "Kết nối KiotViet, Sapo hoặc upload file Excel — AI tự động làm sạch và chuẩn hóa" },
+  { num: 2, icon: "upload_file", title: "Tích hợp dữ liệu", desc: "Kết nối KiotViet, Sapo hoặc tải lên file Excel — AI tự động làm sạch và chuẩn hóa" },
   { num: 3, icon: "bolt", title: "Nhận Thông tin AI", desc: "Trong 60 giây, nhận báo cáo sức khỏe + dự báo xu hướng + 12 đề xuất hành động" },
 ]
 
@@ -25,21 +25,21 @@ const FEATURES = [
   {
     icon: "monitor_heart",
     title: "Chẩn đoán Sức khỏe",
-    desc: "Phát hiện tự động tồn kho quá mức, SKU chậm bán, kênh bán kém hiệu quả",
+    desc: "Phát hiện tự động tồn kho quá mức, mã hàng chậm bán, kênh bán kém hiệu quả",
     color: "text-red-500",
     bg: "bg-red-50 dark:bg-red-950",
   },
   {
     icon: "insights",
     title: "Dự báo Xu hướng",
-    desc: "Dự đoán sản phẩm nào sẽ trending mùa tới với độ tin cậy 89%",
+    desc: "Dự đoán sản phẩm nào sẽ thành xu hướng mùa tới với độ tin cậy 89%",
     color: "text-indigo-500",
     bg: "bg-indigo-50 dark:bg-indigo-950",
   },
   {
     icon: "recommend",
     title: "Đề xuất thông minh",
-    desc: "12+ hành động ưu tiên cao: chuyển kho, markdown, tăng nhập — có số liệu cụ thể",
+    desc: "12+ hành động ưu tiên cao: chuyển kho, giảm giá, tăng nhập — có số liệu cụ thể",
     color: "text-purple-500",
     bg: "bg-purple-50 dark:bg-purple-950",
   },
@@ -88,7 +88,7 @@ export default function LandingPage() {
                 <span className="gradient-text">Sự chắc chắn về Nhu cầu</span>
               </h1>
               <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                AI dự báo xu hướng, tối ưu tồn kho và đề xuất hành động cụ thể — giúp shop thời trang Việt Nam tăng sell-through rate và giảm rủi ro tồn kho.
+                AI dự báo xu hướng, tối ưu tồn kho và đề xuất hành động cụ thể — giúp shop thời trang Việt Nam tăng tỷ lệ bán ra và giảm rủi ro tồn kho.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -103,7 +103,7 @@ export default function LandingPage() {
                   className="px-6 py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:border-primary/50 transition flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-[18px]">preview</span>
-                  Xem Dashboard Mẫu
+                  Xem Bảng điều khiển Mẫu
                 </Link>
               </div>
               {/* Brand logos */}
@@ -129,7 +129,7 @@ export default function LandingPage() {
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {[
-                  { label: "Sell-through", value: "+11%", color: "text-green-600" },
+                  { label: "Tỷ lệ bán ra", value: "+11%", color: "text-green-600" },
                   { label: "Tồn kho giảm", value: "-18%", color: "text-indigo-600" },
                   { label: "Độ tin cậy AI", value: "89%", color: "text-purple-600" },
                   { label: "Đề xuất hành động", value: "12", color: "text-amber-600" },
@@ -141,9 +141,9 @@ export default function LandingPage() {
                 ))}
               </div>
               <div className="bg-indigo-900 rounded-xl p-4">
-                <p className="text-xs text-indigo-300 mb-1">AI Insight</p>
+                <p className="text-xs text-indigo-300 mb-1">Gợi ý AI</p>
                 <p className="text-sm text-white font-medium">
-                  Chuyển 150 đv Wide Leg Trousers → Hà Nội + TikTok để giảm tồn 33%
+                  Chuyển 150 đv Quần Ống Rộng → Hà Nội + TikTok để giảm tồn 33%
                 </p>
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function LandingPage() {
       <section className="py-16 px-4 bg-white dark:bg-slate-950">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-black text-slate-900 dark:text-slate-100 text-center mb-12">
-            Mọi thứ bạn cần trong một Dashboard
+            Mọi thứ bạn cần trong một Bảng điều khiển
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
@@ -310,7 +310,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-slate-800 text-center text-xs text-slate-600">
-            © 2026 {APP_FULL_NAME}. All rights reserved.
+            © {new Date().getFullYear()} {APP_FULL_NAME}. Mọi quyền được bảo lưu.
           </div>
         </div>
       </footer>

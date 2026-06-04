@@ -18,16 +18,16 @@ export function RiskItemTable({ items }: Props) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100 dark:border-slate-800">
-            <th className="text-left pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              SKU / Tên
+            <th className="text-left pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
+              Mã hàng / Tên sản phẩm
             </th>
-            <th className="text-right pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Tồn
+            <th className="text-right pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
+              Tồn kho
             </th>
-            <th className="text-right pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Sell-through
+            <th className="text-right pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
+              Tỷ lệ bán ra
             </th>
-            <th className="text-right pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <th className="text-right pb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
               Rủi ro
             </th>
           </tr>

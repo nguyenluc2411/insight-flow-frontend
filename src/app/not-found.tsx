@@ -18,7 +18,7 @@ export default function NotFound() {
             href={ROUTES.DASHBOARD}
             className="px-6 py-3 bg-brand-gradient text-white font-bold rounded-xl hover:opacity-90 transition"
           >
-            Về Dashboard
+            Về Bảng điều khiển
           </Link>
           <Link
             href={ROUTES.HOME}

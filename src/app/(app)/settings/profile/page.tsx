@@ -64,24 +64,24 @@ export default function ProfilePage() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Quản lý thông tin tài khoản và cài đặt shop</p>
       </div>
 
-      <div className="max-w-2xl space-y-6">
-        {/* Account Info — read-only */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Account Info — read-only, left column */}
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center shrink-0">
-              <span className="text-white text-2xl font-black">
+          <div className="flex flex-col items-center text-center gap-3 mb-6">
+            <div className="w-20 h-20 rounded-full bg-brand-gradient flex items-center justify-center shrink-0">
+              <span className="text-white text-3xl font-black">
                 {user?.fullName ? user.fullName[0].toUpperCase() : "U"}
               </span>
             </div>
             <div>
-              <p className="font-bold text-slate-900 dark:text-slate-100">{user?.fullName ?? "—"}</p>
+              <p className="font-bold text-lg text-slate-900 dark:text-slate-100">{user?.fullName ?? "—"}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
               {tenant && (
-                <p className="text-xs text-primary font-medium mt-0.5">{tenant.slug}.insightflow.ai</p>
+                <p className="text-xs text-primary font-medium mt-1">{tenant.slug}.insightflow.ai</p>
               )}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
             <div>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Tên shop</p>
               <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{tenant?.name ?? "—"}</p>
@@ -93,14 +93,14 @@ export default function ProfilePage() {
               </span>
             </div>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">info</span>
-            Tên, email không thể thay đổi. Liên hệ support để cập nhật.
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 flex items-start gap-1.5">
+            <span className="material-symbols-outlined text-[14px] shrink-0 mt-0.5">info</span>
+            Tên và email không thể tự thay đổi. Liên hệ hỗ trợ để cập nhật.
           </p>
         </div>
 
-        {/* Shop Settings — editable */}
-        <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-6 space-y-6">
+        {/* Shop Settings — editable, right 2 columns */}
+        <form onSubmit={handleSave} className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-6 space-y-6">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">Cài đặt Shop</h2>
 
           {/* Location */}
