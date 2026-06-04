@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">Quên mật khẩu</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Nhập email để nhận link đặt lại mật khẩu
+            Nhập email để nhận liên kết đặt lại mật khẩu
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
               disabled={isLoading}
               className="w-full py-3 rounded-xl bg-brand-gradient text-white font-bold text-sm hover:opacity-90 disabled:opacity-60 transition"
             >
-              {isLoading ? "Đang gửi..." : "Gửi link đặt lại mật khẩu"}
+              {isLoading ? "Đang gửi..." : "Gửi liên kết đặt lại mật khẩu"}
             </button>
 
             <p className="text-center text-sm">

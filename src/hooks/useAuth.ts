@@ -10,8 +10,8 @@ export function useAuth() {
   const router = useRouter()
   const store = useAuthStore()
 
-  async function login(tenantSlug: string, email: string, password: string) {
-    await store.login(tenantSlug, email, password)
+  async function login(email: string, password: string) {
+    await store.login(email, password)
     const user = useAuthStore.getState().user
     if (user?.profileComplete) {
       router.push(ROUTES.DASHBOARD)

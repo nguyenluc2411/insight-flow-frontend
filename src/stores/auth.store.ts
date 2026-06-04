@@ -11,7 +11,7 @@ interface AuthState {
   refreshTokenValue: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (tenantSlug: string, email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<void>
   logout: () => void
   refreshToken: () => Promise<void>
   setAuth: (data: AuthResponse) => void
@@ -69,11 +69,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      login: async (tenantSlug, email, password) => {
+      login: async (email, password) => {
         set({ isLoading: true })
         try {
           const { data } = await api.post<AuthResponse>("/api/v1/auth/login", {
-            tenantSlug, email, password,
+            email, password,
           })
           get().setAuth(data)
           // Best-effort: fetch profileComplete to set cookie; failure is non-fatal

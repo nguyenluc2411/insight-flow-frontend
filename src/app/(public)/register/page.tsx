@@ -266,7 +266,7 @@ export default function RegisterPage() {
               {
                 icon: "monitor_heart",
                 title: "Chẩn đoán sức khỏe tự động",
-                desc: "Phát hiện ngay những SKU đang gặp vấn đề và đề xuất hành động cụ thể",
+                desc: "Phát hiện ngay những mã hàng đang gặp vấn đề và đề xuất hành động cụ thể",
               },
               {
                 icon: "recommend",
@@ -289,7 +289,7 @@ export default function RegisterPage() {
           <div className="bg-white/10 rounded-xl p-4 border border-white/20">
             <p className="text-sm font-bold mb-1">Miễn phí 30 ngày, không cần thẻ tín dụng</p>
             <p className="text-indigo-200 text-xs">
-              Sau 30 ngày, chọn gói phù hợp hoặc tiếp tục dùng gói Free với tính năng cơ bản.
+              Sau 30 ngày, chọn gói phù hợp hoặc tiếp tục dùng gói Miễn phí với tính năng cơ bản.
             </p>
           </div>
         </div>

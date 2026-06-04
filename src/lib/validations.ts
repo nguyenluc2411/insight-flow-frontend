@@ -1,7 +1,6 @@
 import { z } from "zod"
 
 export const loginSchema = z.object({
-  tenantSlug: z.string().min(3, "Tên shop tối thiểu 3 ký tự"),
   email: z.string().email("Email không hợp lệ"),
   password: z.string().min(8, "Mật khẩu tối thiểu 8 ký tự"),
 })

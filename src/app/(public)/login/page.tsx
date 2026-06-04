@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginFormData) {
     try {
-      await login(data.tenantSlug, data.email, data.password)
+      await login(data.email, data.password)
       const currentUser = useAuthStore.getState().user
       if (currentUser?.profileComplete) {
         router.push(ROUTES.DASHBOARD)
@@ -55,24 +55,6 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Tenant Slug */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-              Tên shop (slug)
-            </label>
-            <input
-              {...register("tenantSlug")}
-              placeholder="my-shop"
-              className={cn(
-                "w-full px-4 py-2.5 rounded-lg border text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition",
-                errors.tenantSlug ? "border-red-400" : "border-slate-200 dark:border-slate-700"
-              )}
-            />
-            {errors.tenantSlug && (
-              <p className="text-xs text-red-600 mt-1">{errors.tenantSlug.message}</p>
-            )}
-          </div>
-
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">

@@ -20,7 +20,7 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    if (!token) setError("Link đặt lại mật khẩu không hợp lệ. Vui lòng yêu cầu link mới.")
+    if (!token) setError("Liên kết đặt lại mật khẩu không hợp lệ. Vui lòng yêu cầu liên kết mới.")
   }, [token])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       setDone(true)
       setTimeout(() => router.push(ROUTES.LOGIN), 3000)
     } catch (err: unknown) {
-      setError(parseApiError(err, "Link không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới."))
+      setError(parseApiError(err, "Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu liên kết mới."))
     } finally {
       setIsLoading(false)
     }
@@ -138,7 +138,7 @@ export default function ResetPasswordPage() {
 
             <p className="text-center text-sm">
               <Link href={ROUTES.FORGOT_PASSWORD} className="text-primary font-semibold hover:underline">
-                Yêu cầu link mới
+                Yêu cầu liên kết mới
               </Link>
               {" · "}
               <Link href={ROUTES.LOGIN} className="text-slate-500 hover:underline">
