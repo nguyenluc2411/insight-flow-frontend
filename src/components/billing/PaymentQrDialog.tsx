@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { billingService } from "@/services/billing.service"
-import type { CheckoutInfo } from "@/types/billing.types"
+import type { CheckoutInfo, Subscription } from "@/types/billing.types"
 import { useToast } from "@/hooks/use-toast"
 
 const EXPIRY_SECONDS = 15 * 60
@@ -22,9 +22,10 @@ interface Props {
   onOpenChange: (open: boolean) => void
   checkout: CheckoutInfo | null
   packageName: string
-  /** Plan id the subscription should switch to once payment is confirmed. */
-  targetPlanId: string | null
-  /** Called once the upgrade is detected (parent reloads billing data). */
+  /** Returns true once the polled subscription reflects the paid change
+   *  (plan switched for an upgrade, or endDate extended for a renewal). */
+  isPaid: (sub: Subscription) => boolean
+  /** Called once payment is detected (parent reloads billing data). */
   onSuccess: () => void
 }
 
@@ -43,7 +44,7 @@ export function PaymentQrDialog({
   onOpenChange,
   checkout,
   packageName,
-  targetPlanId,
+  isPaid,
   onSuccess,
 }: Props) {
   const { toast } = useToast()
@@ -75,14 +76,14 @@ export function PaymentQrDialog({
     return () => clearInterval(t)
   }, [open, phase])
 
-  // Poll the subscription: SePay's webhook auto-upgrades the plan after the transfer.
+  // Poll the subscription: SePay's webhook auto-applies the change after the transfer.
   useEffect(() => {
-    if (!open || phase !== "waiting" || !targetPlanId) return
+    if (!open || phase !== "waiting") return
     let active = true
     const t = setInterval(async () => {
       try {
         const sub = await billingService.getCurrentSubscription()
-        if (active && sub.planId === targetPlanId && !successFired.current) {
+        if (active && !successFired.current && isPaid(sub)) {
           successFired.current = true
           setPhase("success")
           onSuccess()
@@ -95,7 +96,7 @@ export function PaymentQrDialog({
       active = false
       clearInterval(t)
     }
-  }, [open, phase, targetPlanId, onSuccess])
+  }, [open, phase, isPaid, onSuccess])
 
   async function copy(text: string, label: string) {
     try {

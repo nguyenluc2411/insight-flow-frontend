@@ -45,7 +45,10 @@ export default function BillingPage() {
   const [upgradingCode, setUpgradingCode] = useState<string | null>(null)
   const [checkout, setCheckout] = useState<CheckoutInfo | null>(null)
   const [payOpen, setPayOpen] = useState(false)
-  const [payTarget, setPayTarget] = useState<{ name: string; planId: string } | null>(null)
+  const [payTarget, setPayTarget] = useState<{
+    name: string
+    isPaid: (sub: Subscription) => boolean
+  } | null>(null)
 
   async function loadData() {
     setLoading(true)
@@ -75,14 +78,20 @@ export default function BillingPage() {
     packages.find((p) => p.plans.some((pl) => pl.id === subscription?.planId))?.code ??
     (tenant?.plan?.toUpperCase() ?? "TRIAL")
 
-  async function handleUpgrade(pkg: Package) {
+  // mode "upgrade": detect plan switch. mode "renew": detect endDate extension (same plan).
+  async function startCheckout(pkg: Package, mode: "upgrade" | "renew") {
     const plan = pickMonthlyPlan(pkg)
     if (!plan) return
+    const baselineEnd = subscription?.endDate ? new Date(subscription.endDate).getTime() : 0
+    const isPaid =
+      mode === "upgrade"
+        ? (sub: Subscription) => sub.planId === plan.id
+        : (sub: Subscription) => !!sub.endDate && new Date(sub.endDate).getTime() > baselineEnd
     setUpgradingCode(pkg.code)
     try {
       const info = await billingService.createCheckout(pkg.code, plan.billingCycle)
       setCheckout(info)
-      setPayTarget({ name: pkg.name, planId: plan.id })
+      setPayTarget({ name: pkg.name, isPaid })
       setPayOpen(true)
     } catch (err: unknown) {
       toast({
@@ -93,6 +102,13 @@ export default function BillingPage() {
     } finally {
       setUpgradingCode(null)
     }
+  }
+
+  const handleUpgrade = (pkg: Package) => startCheckout(pkg, "upgrade")
+
+  function handleRenew() {
+    const pkg = packages.find((p) => p.code === currentPkgCode)
+    if (pkg) startCheckout(pkg, "renew")
   }
 
   if (loading) {
@@ -157,8 +173,12 @@ export default function BillingPage() {
                     Gia hạn {new Date(subscription.endDate).toLocaleDateString("vi-VN")}
                   </p>
                 )}
-                <button className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:border-primary/50 hover:text-primary transition">
-                  Quản lý thanh toán
+                <button
+                  onClick={handleRenew}
+                  disabled={upgradingCode !== null}
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:border-primary/50 hover:text-primary transition disabled:opacity-60"
+                >
+                  Gia hạn gói
                 </button>
               </div>
             )}
@@ -288,7 +308,7 @@ export default function BillingPage() {
         onOpenChange={setPayOpen}
         checkout={checkout}
         packageName={payTarget?.name ?? ""}
-        targetPlanId={payTarget?.planId ?? null}
+        isPaid={payTarget?.isPaid ?? (() => false)}
         onSuccess={loadData}
       />
     </div>
