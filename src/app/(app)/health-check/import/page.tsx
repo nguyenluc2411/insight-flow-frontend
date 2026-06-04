@@ -33,13 +33,13 @@ const FORMAT_CARDS = [
 ]
 
 const REQUIRED_FIELDS = [
-  { name: "product_id", desc: "Mã sản phẩm" },
-  { name: "product_name", desc: "Tên sản phẩm" },
-  { name: "category", desc: "Danh mục" },
-  { name: "quantity_sold", desc: "Số lượng đã bán" },
-  { name: "quantity_on_hand", desc: "Tồn kho hiện tại" },
-  { name: "channel", desc: "Kênh bán hàng" },
-  { name: "sale_date", desc: "Ngày giao dịch" },
+  { title: "Mã SKU", subtitle: "Mã định danh sản phẩm" },
+  { title: "Tên sản phẩm", subtitle: "Tên hiển thị" },
+  { title: "Danh mục", subtitle: "Nhóm sản phẩm" },
+  { title: "Số lượng đã bán", subtitle: "Theo từng kỳ" },
+  { title: "Tồn kho hiện tại", subtitle: "Số lượng còn lại" },
+  { title: "Kênh bán hàng", subtitle: "TikTok, Shopee, Offline..." },
+  { title: "Ngày giao dịch", subtitle: "Thời điểm bán" },
 ]
 
 export default function ImportPage() {
@@ -166,15 +166,13 @@ export default function ImportPage() {
             </p>
             <div className="space-y-3">
               {REQUIRED_FIELDS.map((field) => (
-                <div key={field.name} className="flex items-start gap-2.5">
+                <div key={field.title} className="flex items-start gap-2.5">
                   <span className="material-symbols-outlined text-[14px] text-green-500 mt-0.5 shrink-0">
                     check_circle
                   </span>
                   <div>
-                    <code className="text-xs font-mono text-primary bg-indigo-50 dark:bg-indigo-950 px-1.5 py-0.5 rounded">
-                      {field.name}
-                    </code>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{field.desc}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{field.title}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{field.subtitle}</p>
                   </div>
                 </div>
               ))}
