@@ -28,7 +28,7 @@ export function CategoryRiskChart({ categories }: Props) {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{cat.name}</span>
               <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {cat.value.toLocaleString("vi-VN")} đv
+                {cat.value.toLocaleString("vi-VN")} sản phẩm
               </span>
             </div>
             <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">

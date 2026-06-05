@@ -143,7 +143,7 @@ export default function LandingPage() {
               <div className="bg-indigo-900 rounded-xl p-4">
                 <p className="text-xs text-indigo-300 mb-1">Gợi ý AI</p>
                 <p className="text-sm text-white font-medium">
-                  Chuyển 150 đv Quần Ống Rộng → Hà Nội + TikTok để giảm tồn 33%
+                  Chuyển 150 đơn vị Quần Ống Rộng → Hà Nội + TikTok để giảm tồn 33%
                 </p>
               </div>
             </div>

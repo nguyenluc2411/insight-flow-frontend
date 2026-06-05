@@ -55,9 +55,9 @@ function variantLabel(variantId: string, skuMap: Map<string, string>): string {
 
 function buildTopActionCard(item: TopAction, skuMap: Map<string, string>) {
   const impact = item.action === "CLEARANCE" && item.suggestedDiscountPct
-    ? `Đề xuất giảm ${item.suggestedDiscountPct}% — thoát ${item.currentStock ?? "?"} đv tồn`
+    ? `Đề xuất giảm ${item.suggestedDiscountPct}% — thoát ${item.currentStock ?? "?"} sản phẩm tồn`
     : item.action === "RESTOCK" && item.suggestedRestockQty
-    ? `Nhập thêm ${item.suggestedRestockQty} đv để tránh hết hàng`
+    ? `Nhập thêm ${item.suggestedRestockQty} sản phẩm để tránh hết hàng`
     : item.reason ?? "Xem chi tiết tại bảng đề xuất"
 
   return {
