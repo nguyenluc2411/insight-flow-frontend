@@ -14,6 +14,9 @@ import { FeatureGate } from "@/components/feature/FeatureGate"
 import { useToast } from "@/hooks/use-toast"
 import { getForecastPeriod } from "@/lib/utils"
 import type { TopAction } from "@/types/bff.types"
+import { useQuery } from "@tanstack/react-query"
+import { catalogService } from "@/services/catalog.service"
+import { useAuthStore } from "@/stores/auth.store"
 
 // Action type → icon mapping
 const ACTION_ICONS: Record<string, string> = {
@@ -45,7 +48,12 @@ const AI_LOGIC_RULES = [
   "Đề xuất nhập thêm nếu tỷ lệ bán ra >75% và nguy cơ hết hàng >60%",
 ]
 
-function buildTopActionCard(item: TopAction) {
+// Prefer the SKU (e.g. ATB-001-M-WHITE) over the raw variant UUID for readability.
+function variantLabel(variantId: string, skuMap: Map<string, string>): string {
+  return skuMap.get(variantId) ?? `Mã hàng ${variantId.slice(-6)}`
+}
+
+function buildTopActionCard(item: TopAction, skuMap: Map<string, string>) {
   const impact = item.action === "CLEARANCE" && item.suggestedDiscountPct
     ? `Đề xuất giảm ${item.suggestedDiscountPct}% — thoát ${item.currentStock ?? "?"} đv tồn`
     : item.action === "RESTOCK" && item.suggestedRestockQty
@@ -56,7 +64,7 @@ function buildTopActionCard(item: TopAction) {
     priority: PRIORITY_LABEL[item.priority] ?? item.priority,
     priorityColor: PRIORITY_COLOR[item.priority] ?? PRIORITY_COLOR.LOW,
     icon: ACTION_ICONS[item.action] ?? "recommend",
-    title: `${ACTION_LABELS[item.action] ?? item.action} — Mã hàng ${item.variantId.slice(-6)}`,
+    title: `${ACTION_LABELS[item.action] ?? item.action} — ${variantLabel(item.variantId, skuMap)}`,
     description: item.reason ?? "Phân tích dựa trên dữ liệu bán hàng và tồn kho hiện tại",
     impact,
     confidence: CONFIDENCE_FROM_PRIORITY[item.priority] ?? 70,
@@ -76,6 +84,17 @@ function RecommendationsPageContent() {
   const { data: recoData, isLoading } = useRecommendations()
   const { data: summary } = useRecommendationsSummary()
   const { mutate: refresh, isPending: isRefreshing } = useRefreshRecommendations()
+  const { tenant } = useAuthStore()
+
+  // Resolve variantId -> SKU so cards/table show readable identifiers instead of UUIDs.
+  const { data: variantsPage } = useQuery({
+    queryKey: ["catalog-variants", tenant?.id],
+    queryFn: () => catalogService.getAllVariants(500),
+    staleTime: 5 * 60_000,
+  })
+  const skuMap = new Map<string, string>(
+    (variantsPage?.content ?? []).map((v) => [v.id, v.sku])
+  )
 
   const realItems = recoData?.items ?? []
   const totalActions = summary?.total ?? recoData?.total ?? 0
@@ -110,7 +129,7 @@ function RecommendationsPageContent() {
   ]
 
   // Top 3 actions from BFF summary
-  const topActionCards = (summary?.topActions ?? []).slice(0, 3).map(buildTopActionCard)
+  const topActionCards = (summary?.topActions ?? []).slice(0, 3).map((a) => buildTopActionCard(a, skuMap))
 
   // Action distribution from BFF summary.byAction
   const byAction = summary?.byAction ?? {}
@@ -270,7 +289,7 @@ function RecommendationsPageContent() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {realItems.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 pr-4 font-mono text-xs text-slate-500">{row.variantId.slice(0, 8)}</td>
+                    <td className="py-3 pr-4 font-mono text-xs text-slate-500">{variantLabel(row.variantId, skuMap)}</td>
                     <td className="py-3 pr-4 text-slate-700 dark:text-slate-300">—</td>
                     <td className="py-3 pr-4 font-medium text-slate-900 dark:text-slate-100">{ACTION_LABELS[row.action] ?? row.action}</td>
                     <td className="py-3 pr-4 text-slate-600 dark:text-slate-400 text-xs max-w-[200px] truncate">{row.reason ?? "—"}</td>

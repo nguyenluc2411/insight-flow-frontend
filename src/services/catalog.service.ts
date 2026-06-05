@@ -151,6 +151,12 @@ export const catalogService = {
     return data
   },
 
+  // All variants for the tenant (flat). Used to resolve variantId -> sku for readable labels.
+  async getAllVariants(size = 500): Promise<SpringPage<ProductVariant>> {
+    const { data } = await api.get("/api/v1/catalog/products/variants", { params: { size } })
+    return data
+  },
+
   async createProduct(payload: CreateProductRequest): Promise<Product> {
     const { data } = await api.post("/api/v1/catalog/products", payload)
     return data
