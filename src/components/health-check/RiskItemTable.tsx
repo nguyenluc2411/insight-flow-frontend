@@ -3,6 +3,7 @@ import { RiskBadge } from "@/components/common/RiskBadge"
 interface RiskItem {
   sku: string
   name: string
+  reason?: string
   stock: number
   sellThrough: number
   risk: "HIGH" | "MEDIUM" | "LOW" | "STRATEGIC"
@@ -33,11 +34,14 @@ export function RiskItemTable({ items }: Props) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {items.map((item) => (
-            <tr key={item.sku} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          {items.map((item, idx) => (
+            <tr key={`${item.sku}-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
               <td className="py-3 pr-4">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">{item.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{item.sku}</p>
+                <p className="font-semibold text-slate-900 dark:text-slate-100" title={item.reason}>{item.name}</p>
+                <p className="text-xs font-mono text-slate-500 dark:text-slate-400">{item.sku}</p>
+                {item.reason && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{item.reason}</p>
+                )}
               </td>
               <td className="py-3 text-right font-medium text-slate-700 dark:text-slate-300">
                 {item.stock.toLocaleString("vi-VN")}

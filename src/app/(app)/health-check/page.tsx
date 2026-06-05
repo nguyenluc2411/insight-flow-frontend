@@ -13,12 +13,31 @@ import { useHealthCheck } from "@/hooks/useHealthCheck"
 import { useInventorySummary, useCategories } from "@/hooks/useCatalog"
 import { useRecommendations } from "@/hooks/useRecommendations"
 import { getForecastPeriod } from "@/lib/utils"
+import { useQuery } from "@tanstack/react-query"
+import { catalogService } from "@/services/catalog.service"
+import { useAuthStore } from "@/stores/auth.store"
 
 export default function HealthCheckPage() {
   const { data: health, isLoading } = useHealthCheck()
   const { data: invSummary, isLoading: invLoading } = useInventorySummary()
   const { data: categories } = useCategories()
   const { data: clearanceData } = useRecommendations({ action: "CLEARANCE" })
+
+  // Resolve variantId -> real SKU / product name so the risk table shows readable
+  // identifiers instead of raw UUIDs.
+  const { tenant } = useAuthStore()
+  const { data: variantsPage } = useQuery({
+    queryKey: ["catalog-variants", tenant?.id],
+    queryFn: () => catalogService.getAllVariants(500),
+    staleTime: 5 * 60_000,
+  })
+  const { data: productsPage } = useQuery({
+    queryKey: ["catalog-products-all", tenant?.id],
+    queryFn: () => catalogService.getProducts({ size: 500 }),
+    staleTime: 5 * 60_000,
+  })
+  const variantById = new Map((variantsPage?.content ?? []).map((v) => [v.id, v]))
+  const productById = new Map((productsPage?.content ?? []).map((p) => [p.id, p]))
 
   const loading = isLoading || invLoading
   const pressurePct = health?.inventoryPressurePct ?? 0
@@ -29,15 +48,20 @@ export default function HealthCheckPage() {
   const lowStock = invSummary?.lowStockCount ?? 0
 
   // Map ML clearance recommendations → RiskItemTable format
-  const riskItems = (clearanceData?.items ?? []).map((item) => ({
-    sku: item.variantId.slice(0, 8) + "…",
-    name: item.reason ?? `Mã hàng ${item.variantId.slice(-6)}`,
-    stock: item.currentStock ?? 0,
-    sellThrough: item.salesVelocity30d != null && (item.currentStock ?? 0) > 0
-      ? Math.min(99, Math.round((item.salesVelocity30d * 30) / ((item.currentStock ?? 1) + item.salesVelocity30d * 30) * 100))
-      : 0,
-    risk: item.priority as "HIGH" | "MEDIUM" | "LOW",
-  }))
+  const riskItems = (clearanceData?.items ?? []).map((item) => {
+    const v = variantById.get(item.variantId)
+    const p = v ? productById.get(v.productId) : undefined
+    return {
+      sku: v?.sku ?? item.variantId.slice(0, 8) + "…",
+      name: p?.name ?? v?.sku ?? `Mã hàng ${item.variantId.slice(-6)}`,
+      reason: item.reason ?? undefined,
+      stock: item.currentStock ?? 0,
+      sellThrough: item.salesVelocity30d != null && (item.currentStock ?? 0) > 0
+        ? Math.min(99, Math.round((item.salesVelocity30d * 30) / ((item.currentStock ?? 1) + item.salesVelocity30d * 30) * 100))
+        : 0,
+      risk: item.priority as "HIGH" | "MEDIUM" | "LOW",
+    }
+  })
 
   // Dynamic issues from real health + inventory data
   const dynamicIssues = [
