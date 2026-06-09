@@ -34,7 +34,6 @@ export function FileDropzone({ onFileAccepted, isLoading = false }: Props) {
     accept: {
       "text/csv": [".csv"],
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-      "application/json": [".json"],
     },
     maxFiles: 1,
     disabled: isLoading,
@@ -86,7 +85,7 @@ export function FileDropzone({ onFileAccepted, isLoading = false }: Props) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {["CSV", "XLSX", "JSON"].map((ext) => (
+            {["CSV", "XLSX"].map((ext) => (
               <span
                 key={ext}
                 className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded"
