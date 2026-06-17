@@ -29,7 +29,7 @@ export function FileDropzone({ onFileAccepted, isLoading = false }: Props) {
     [onFileAccepted]
   )
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: {
       "text/csv": [".csv"],
@@ -101,7 +101,12 @@ export function FileDropzone({ onFileAccepted, isLoading = false }: Props) {
         <button
           type="button"
           className="mt-6 px-6 py-3 bg-brand-gradient text-white font-bold text-sm rounded-xl hover:opacity-90 transition inline-flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            // Open the picker explicitly; stop bubbling so the dropzone root's
+            // own click handler doesn't also fire (which would re-open it).
+            e.stopPropagation()
+            open()
+          }}
         >
           <span className="material-symbols-outlined text-[18px]">upload_file</span>
           Tải lên Dữ liệu Doanh nghiệp
