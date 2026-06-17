@@ -2,14 +2,17 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { isAxiosError } from "axios"
 import { useAuthStore } from "@/stores/auth.store"
 import { authService } from "@/services/auth.service"
+import { useToast } from "@/hooks/use-toast"
 import { Header } from "@/components/layout/Header"
 import { ROUTES } from "@/lib/constants"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, accessToken, setUser, logout } = useAuthStore()
   const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -23,11 +26,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           router.push(ROUTES.ONBOARDING)
         }
       })
-      .catch(() => {
-        logout()
-        router.push(ROUTES.LOGIN)
+      .catch((err) => {
+        // Only a genuine 401 means the session is invalid → sign out.
+        // Network/5xx errors must NOT silently bounce the user back to login
+        // (that hid a backend outage behind a clean console before).
+        if (isAxiosError(err) && err.response?.status === 401) {
+          logout()
+          router.push(ROUTES.LOGIN)
+          return
+        }
+        console.error("Failed to load current user:", err)
+        toast({
+          title: "Không tải được phiên đăng nhập",
+          description: "Máy chủ tạm thời không phản hồi. Vui lòng thử lại.",
+          variant: "destructive",
+        })
       })
-  }, [isAuthenticated, accessToken, setUser, logout, router])
+  }, [isAuthenticated, accessToken, setUser, logout, router, toast])
 
   if (!isAuthenticated) return null
 
