@@ -30,3 +30,4 @@ Thumbs.db
 
 # Claude Code per-machine config
 .claude/settings.local.json
+.vercel
