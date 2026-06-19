@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/stores/auth.store"
 import { authService } from "@/services/auth.service"
 import { ROUTES } from "@/lib/constants"
+import { landingPathForUser } from "@/lib/auth-routing"
 import type { TenantSettings } from "@/types/auth.types"
 
 export function useAuth() {
@@ -13,11 +14,7 @@ export function useAuth() {
   async function login(email: string, password: string) {
     await store.login(email, password)
     const user = useAuthStore.getState().user
-    if (user?.profileComplete) {
-      router.push(ROUTES.DASHBOARD)
-    } else {
-      router.push(ROUTES.ONBOARDING)
-    }
+    router.push(landingPathForUser(user))
   }
 
   async function logout() {

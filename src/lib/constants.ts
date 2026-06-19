@@ -9,6 +9,7 @@ export const ROUTES = {
   RESET_PASSWORD: "/reset-password",
   ONBOARDING: "/onboarding",
   DASHBOARD: "/dashboard",
+  ADMIN: "/admin",
   MARKET: "/market",
   HEALTH_CHECK: "/health-check",
   HEALTH_CHECK_IMPORT: "/health-check/import",

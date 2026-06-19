@@ -10,6 +10,7 @@ import { useAuthStore } from "@/stores/auth.store"
 import { useToast } from "@/hooks/use-toast"
 import { parseApiError } from "@/lib/errors"
 import { ROUTES } from "@/lib/constants"
+import { landingPathForUser } from "@/lib/auth-routing"
 import { cn } from "@/lib/utils"
 import { LogoMark } from "@/components/common/Logo"
 
@@ -29,11 +30,8 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password)
       const currentUser = useAuthStore.getState().user
-      if (currentUser?.profileComplete) {
-        router.push(ROUTES.DASHBOARD)
-      } else {
-        router.push(ROUTES.ONBOARDING)
-      }
+      // Route by role: SUPER_ADMIN → /admin, else dashboard/onboarding.
+      router.push(landingPathForUser(currentUser))
     } catch (err: unknown) {
       toast({ title: "Lỗi đăng nhập", description: parseApiError(err, "Đăng nhập thất bại"), variant: "destructive" })
     }
