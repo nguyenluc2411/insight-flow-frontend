@@ -3,8 +3,13 @@ import type {
   AdminMetrics,
   AdminTenantDetail,
   AdminTenantListItem,
+  BillingHistoryItem,
   BillingMetrics,
+  BillingPackage,
+  BillingPlan,
+  CreatePackagePayload,
   Page,
+  PaymentTransactionItem,
 } from "@/types/admin.types"
 
 /**
@@ -57,6 +62,71 @@ export const adminService = {
     const { data } = await api.patch<AdminTenantDetail>(
       `/api/v1/admin/tenants/${id}/status`,
       { status }
+    )
+    return data
+  },
+
+  // ── Billing catalog (packages & plans) ─────────────────────────────────────
+
+  /** All packages incl. hidden/inactive, with their plans. */
+  async listPackages(): Promise<BillingPackage[]> {
+    const { data } = await api.get<BillingPackage[]>("/api/v1/billing/admin/catalog/packages")
+    return data
+  },
+
+  /** Update a plan's price / trial / status. */
+  async updatePlan(
+    planId: string,
+    payload: { priceVnd?: number; trialDays?: number; billingCycle?: string; status?: string }
+  ): Promise<BillingPlan> {
+    const { data } = await api.patch<BillingPlan>(
+      `/api/v1/billing/admin/catalog/plans/${planId}`,
+      payload
+    )
+    return data
+  },
+
+  /** Update package metadata / visibility. */
+  async updatePackage(
+    packageId: string,
+    payload: { name?: string; description?: string; displayOrder?: number; status?: string }
+  ): Promise<BillingPackage> {
+    const { data } = await api.patch<BillingPackage>(
+      `/api/v1/billing/admin/catalog/packages/${packageId}`,
+      payload
+    )
+    return data
+  },
+
+  /** Create a new package with an initial monthly plan. */
+  async createPackage(payload: CreatePackagePayload): Promise<BillingPackage> {
+    const { data } = await api.post<BillingPackage>(
+      "/api/v1/billing/admin/catalog/packages",
+      payload
+    )
+    return data
+  },
+
+  // ── Per-tenant billing history & transactions ──────────────────────────────
+
+  async getTenantBillingHistory(
+    tenantId: string,
+    params: { page?: number; size?: number } = {}
+  ): Promise<Page<BillingHistoryItem>> {
+    const { data } = await api.get<Page<BillingHistoryItem>>(
+      `/api/v1/billing/admin/tenants/${tenantId}/history`,
+      { params: { page: params.page ?? 0, size: params.size ?? 20 } }
+    )
+    return data
+  },
+
+  async getTenantTransactions(
+    tenantId: string,
+    params: { page?: number; size?: number } = {}
+  ): Promise<Page<PaymentTransactionItem>> {
+    const { data } = await api.get<Page<PaymentTransactionItem>>(
+      `/api/v1/billing/admin/tenants/${tenantId}/transactions`,
+      { params: { page: params.page ?? 0, size: params.size ?? 20 } }
     )
     return data
   },

@@ -55,3 +55,74 @@ export function useUpdateTenantStatus() {
     },
   })
 }
+
+// ── Billing catalog ──────────────────────────────────────────────────────────
+
+/** All packages incl. hidden/inactive. */
+export function useAdminPackages() {
+  return useQuery({
+    queryKey: ["admin", "packages"],
+    queryFn: () => adminService.listPackages(),
+    staleTime: 30 * 1000,
+  })
+}
+
+export function useUpdatePlan() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      planId,
+      ...payload
+    }: {
+      planId: string
+      priceVnd?: number
+      trialDays?: number
+      billingCycle?: string
+      status?: string
+    }) => adminService.updatePlan(planId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "packages"] }),
+  })
+}
+
+export function useUpdatePackage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      packageId,
+      ...payload
+    }: {
+      packageId: string
+      name?: string
+      description?: string
+      displayOrder?: number
+      status?: string
+    }) => adminService.updatePackage(packageId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "packages"] }),
+  })
+}
+
+export function useCreatePackage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminService.createPackage,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "packages"] }),
+  })
+}
+
+// ── Per-tenant billing ───────────────────────────────────────────────────────
+
+export function useTenantBillingHistory(tenantId: string | null) {
+  return useQuery({
+    queryKey: ["admin", "tenant-history", tenantId],
+    queryFn: () => adminService.getTenantBillingHistory(tenantId as string),
+    enabled: !!tenantId,
+  })
+}
+
+export function useTenantTransactions(tenantId: string | null) {
+  return useQuery({
+    queryKey: ["admin", "tenant-transactions", tenantId],
+    queryFn: () => adminService.getTenantTransactions(tenantId as string),
+    enabled: !!tenantId,
+  })
+}

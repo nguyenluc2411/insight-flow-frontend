@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { isSuperAdminToken } from "@/lib/auth-routing"
+import { isSuperAdminToken, isTokenLive } from "@/lib/auth-routing"
 
 const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/reset-password"]
 const ONBOARDING_ROUTE = "/onboarding"
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const accessToken = request.cookies.get("access_token")?.value
+  const rawToken = request.cookies.get("access_token")?.value
   const profileComplete = request.cookies.get("profile_complete")?.value
+
+  // An expired/garbage cookie must NOT count as a session — otherwise yesterday's
+  // stale token bounces the user off /login straight back into the old account.
+  const accessToken = isTokenLive(rawToken) ? rawToken : undefined
 
   const isPublic = PUBLIC_ROUTES.includes(pathname)
   const isOnboarding = pathname.startsWith(ONBOARDING_ROUTE)

@@ -12,10 +12,11 @@ const ADMIN_ROLE = "SUPER_ADMIN"
 const NAV = [
   { label: "Tổng quan", href: "/admin", icon: "monitoring" },
   { label: "Khách hàng", href: "/admin/tenants", icon: "groups" },
+  { label: "Gói & Giá", href: "/admin/plans", icon: "sell" },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, logout } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -31,6 +32,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/dashboard")
     }
   }, [isAuthenticated, user, isAdmin, router])
+
+  function handleLogout() {
+    logout()
+    router.replace("/login")
+  }
 
   if (!isAuthenticated || !user || !isAdmin) return null
 
@@ -65,7 +71,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               )
             })}
           </nav>
-          <div className="p-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-1">
+            <div className="px-3 py-2">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                {user.fullName || "Admin"}
+              </p>
+              <p className="text-xs text-slate-400 truncate">{user.email}</p>
+            </div>
             <Link
               href="/dashboard"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -73,6 +85,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
               Về ứng dụng
             </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+              Đăng xuất
+            </button>
           </div>
         </aside>
 
@@ -94,6 +113,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {item.label}
               </Link>
             ))}
+            <button
+              onClick={handleLogout}
+              className="ml-auto shrink-0 flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400 px-2 py-1"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              Đăng xuất
+            </button>
           </div>
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
         </div>

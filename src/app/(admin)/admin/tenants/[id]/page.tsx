@@ -14,9 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { TenantStatusBadge } from "@/components/admin/TenantStatusBadge"
-import { useAdminTenant, useUpdateTenantStatus } from "@/hooks/useAdmin"
+import {
+  useAdminTenant,
+  useTenantBillingHistory,
+  useTenantTransactions,
+  useUpdateTenantStatus,
+} from "@/hooks/useAdmin"
 import { useToast } from "@/hooks/use-toast"
-import { formatDate } from "@/lib/utils"
+import { formatCurrency, formatDate } from "@/lib/utils"
 import { parseApiError } from "@/lib/errors"
 
 export default function AdminTenantDetailPage() {
@@ -163,6 +168,9 @@ export default function AdminTenantDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Billing */}
+          {id && <TenantBilling tenantId={id} />}
         </>
       )}
 
@@ -191,6 +199,116 @@ export default function AdminTenantDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function TenantBilling({ tenantId }: { tenantId: string }) {
+  const { data: history, isLoading: hLoading, isError: hError } = useTenantBillingHistory(tenantId)
+  const { data: txns, isLoading: tLoading, isError: tError } = useTenantTransactions(tenantId)
+
+  const statusColor = (status?: string | null) => {
+    const s = status?.toUpperCase()
+    if (s === "SUCCESS") return "text-green-600 dark:text-green-400"
+    if (s === "REFUNDED" || s?.startsWith("PENDING")) return "text-amber-600 dark:text-amber-400"
+    if (s?.startsWith("FAILED")) return "text-red-600 dark:text-red-400"
+    return "text-slate-500 dark:text-slate-400"
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      {/* Payment transactions */}
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Lịch sử thanh toán</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {tLoading ? (
+            <div className="p-6 space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-6 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+              ))}
+            </div>
+          ) : tError ? (
+            <p className="p-6 text-sm text-slate-500 dark:text-slate-400">Không tải được giao dịch.</p>
+          ) : (txns?.content ?? []).length === 0 ? (
+            <p className="p-6 text-sm text-slate-500 dark:text-slate-400">Chưa có giao dịch thanh toán.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-y border-slate-100 dark:border-slate-800 text-left text-slate-500 dark:text-slate-400">
+                    <th className="px-6 py-3 font-semibold">Thời gian</th>
+                    <th className="px-6 py-3 font-semibold">Gói</th>
+                    <th className="px-6 py-3 font-semibold text-right">Số tiền</th>
+                    <th className="px-6 py-3 font-semibold">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {txns!.content.map((t) => (
+                    <tr key={t.id} className="border-b border-slate-50 dark:border-slate-800/50">
+                      <td className="px-6 py-3 text-slate-500 dark:text-slate-400">{formatDate(t.createdAt)}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{t.packageCode || "—"}</td>
+                      <td className="px-6 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                        {t.amount != null ? formatCurrency(t.amount) : "—"}
+                      </td>
+                      <td className={`px-6 py-3 font-medium ${statusColor(t.status)}`}>{t.status || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Billing history (subscription events) */}
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Lịch sử gói đăng ký</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {hLoading ? (
+            <div className="p-6 space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-6 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+              ))}
+            </div>
+          ) : hError ? (
+            <p className="p-6 text-sm text-slate-500 dark:text-slate-400">Không tải được lịch sử gói.</p>
+          ) : (history?.content ?? []).length === 0 ? (
+            <p className="p-6 text-sm text-slate-500 dark:text-slate-400">Chưa có thay đổi gói nào.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-y border-slate-100 dark:border-slate-800 text-left text-slate-500 dark:text-slate-400">
+                    <th className="px-6 py-3 font-semibold">Thời gian</th>
+                    <th className="px-6 py-3 font-semibold">Sự kiện</th>
+                    <th className="px-6 py-3 font-semibold">Gói</th>
+                    <th className="px-6 py-3 font-semibold text-right">Số tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history!.content.map((h) => (
+                    <tr key={h.id} className="border-b border-slate-50 dark:border-slate-800/50">
+                      <td className="px-6 py-3 text-slate-500 dark:text-slate-400">{formatDate(h.createdAt)}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{h.eventType || "—"}</td>
+                      <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
+                        {h.fromPackageCode ? `${h.fromPackageCode} → ` : ""}
+                        {h.toPackageCode || "—"}
+                      </td>
+                      <td className="px-6 py-3 text-right tabular-nums text-slate-900 dark:text-slate-100">
+                        {h.amountVnd != null ? formatCurrency(h.amountVnd) : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
