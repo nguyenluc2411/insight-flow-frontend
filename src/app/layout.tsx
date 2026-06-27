@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import "@/styles/globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
+import { TrackingProvider } from "@/components/TrackingProvider"
 
 export const metadata: Metadata = {
   title: "InsightFlow AI — Dự báo Thời trang Việt Nam",
@@ -18,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="font-sans bg-bg-base text-slate-900 antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <TrackingProvider />
+          {children}
+        </Providers>
         <Toaster />
       </body>
     </html>

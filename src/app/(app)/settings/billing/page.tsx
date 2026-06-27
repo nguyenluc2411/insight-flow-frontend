@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { parseApiError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import { PaymentQrDialog } from "@/components/billing/PaymentQrDialog"
+import { clearEntitlementsCache } from "@/hooks/use-entitlements"
 
 const FEATURE_LABELS: Record<string, string> = {
   DEMAND_FORECAST: "Dự báo nhu cầu AI",
@@ -35,7 +36,7 @@ function pickMonthlyPlan(pkg: Package) {
 }
 
 export default function BillingPage() {
-  const { tenant } = useAuthStore()
+  const { tenant, updateTenantPlan } = useAuthStore()
   const { toast } = useToast()
 
   const [packages, setPackages] = useState<Package[]>([])
@@ -50,7 +51,20 @@ export default function BillingPage() {
     isPaid: (sub: Subscription) => boolean
   } | null>(null)
 
+  // Sync resolved plan code into auth store so dashboard / other pages stay fresh.
+  const currentPkgCode =
+    subscription?.packageCode?.toUpperCase() ??
+    packages.find((p) => p.plans.some((pl) => pl.id === subscription?.planId))?.code ??
+    (tenant?.plan?.toUpperCase() ?? "TRIAL")
+
+  useEffect(() => {
+    if (subscription?.packageCode) {
+      updateTenantPlan(subscription.packageCode.toLowerCase())
+    }
+  }, [subscription]) // eslint-disable-line react-hooks/exhaustive-deps
+
   async function loadData() {
+    clearEntitlementsCache()
     setLoading(true)
     try {
       const [pkgs, sub, usg] = await Promise.allSettled([
@@ -73,10 +87,6 @@ export default function BillingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Determine current package code from subscription's plan, fallback to tenant.plan
-  const currentPkgCode =
-    packages.find((p) => p.plans.some((pl) => pl.id === subscription?.planId))?.code ??
-    (tenant?.plan?.toUpperCase() ?? "TRIAL")
 
   // mode "upgrade": detect plan switch. mode "renew": detect endDate extension (same plan).
   async function startCheckout(pkg: Package, mode: "upgrade" | "renew") {

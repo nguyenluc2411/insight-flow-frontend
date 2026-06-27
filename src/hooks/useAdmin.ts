@@ -126,3 +126,62 @@ export function useTenantTransactions(tenantId: string | null) {
     enabled: !!tenantId,
   })
 }
+
+// ── Refunds ──────────────────────────────────────────────────────────────────
+
+/** Transactions filtered by status (defaults to PENDING_REFUND), with optional search. */
+export function useRefunds(
+  params: { statuses?: string[]; q?: string; page?: number; size?: number } = {}
+) {
+  return useQuery({
+    queryKey: ["admin", "refunds", params],
+    queryFn: () => adminService.listRefunds(params),
+    placeholderData: (prev) => prev,
+  })
+}
+
+/** Single refund-candidate transaction detail. */
+export function useRefund(id: string | null) {
+  return useQuery({
+    queryKey: ["admin", "refund", id],
+    queryFn: () => adminService.getRefund(id as string),
+    enabled: !!id,
+  })
+}
+
+/** Confirm a manual refund, then refresh the refund list + detail. */
+export function useConfirmRefund() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      adminService.confirmRefund(id, note),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["admin", "refunds"] })
+      qc.invalidateQueries({ queryKey: ["admin", "refund", vars.id] })
+    },
+  })
+}
+
+/** Mark a PENDING_REFUND transaction as junk (not ours), then refresh lists. */
+export function useMarkJunk() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      adminService.markJunk(id, note),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["admin", "refunds"] })
+      qc.invalidateQueries({ queryKey: ["admin", "refund", vars.id] })
+    },
+  })
+}
+
+/** Permanently delete a junk transaction, then refresh lists. */
+export function useDeleteTransaction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => adminService.deleteTransaction(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "refunds"] })
+    },
+  })
+}

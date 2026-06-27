@@ -16,7 +16,7 @@ export function Header() {
   const [lang, setLang] = useState<"VI" | "EN">("VI")
   const [avatarOpen, setAvatarOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
-  const { user, tenant, logout } = useAuthStore()
+  const { user, tenant, logout, isAuthenticated } = useAuthStore()
   const { hasFeature, loaded } = useEntitlements()
 
   // Show ALL items; mark the ones the plan doesn't include as locked.
@@ -87,43 +87,59 @@ export function Header() {
               {lang}
             </button>
 
-            {/* Avatar Dropdown */}
-            <div className="relative" ref={avatarRef}>
-              <button
-                onClick={() => setAvatarOpen((o) => !o)}
-                className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity"
-              >
-                {initials}
-              </button>
-              {avatarOpen && (
-                <div className="absolute right-0 top-10 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-lg py-1 z-50">
-                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                      {user?.fullName ?? "—"}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
-                    {tenant?.name && (
-                      <p className="text-xs text-primary font-medium mt-0.5 truncate">{tenant.name}</p>
+            {/* Avatar Dropdown or Login Button */}
+            {!isAuthenticated ? (
+              <Link href={ROUTES.LOGIN} className="hidden sm:flex items-center gap-1 px-4 py-1.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors">
+                Đăng nhập
+              </Link>
+            ) : (
+              <div className="relative" ref={avatarRef}>
+                <button
+                  onClick={() => setAvatarOpen((o) => !o)}
+                  className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity"
+                >
+                  {initials}
+                </button>
+                {avatarOpen && (
+                  <div className="absolute right-0 top-10 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-lg py-1 z-50">
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                        {user?.fullName ?? "—"}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
+                      {tenant?.name && (
+                        <p className="text-xs text-primary font-medium mt-0.5 truncate">{tenant.name}</p>
+                      )}
+                    </div>
+                    {user?.roles?.includes("SUPER_ADMIN") && (
+                      <Link
+                        href="/admin/analytics"
+                        onClick={() => setAvatarOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors border-b border-slate-100 dark:border-slate-800"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">monitoring</span>
+                        System Analytics
+                      </Link>
                     )}
+                    <Link
+                      href={ROUTES.SETTINGS_PROFILE}
+                      onClick={() => setAvatarOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
+                      Cài đặt tài khoản
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">logout</span>
+                      Đăng xuất
+                    </button>
                   </div>
-                  <Link
-                    href={ROUTES.SETTINGS_PROFILE}
-                    onClick={() => setAvatarOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
-                    Cài đặt tài khoản
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">logout</span>
-                    Đăng xuất
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Mobile Hamburger */}
             <button

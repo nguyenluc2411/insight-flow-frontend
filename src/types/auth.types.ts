@@ -21,7 +21,7 @@ export interface Tenant {
   id: string
   name: string
   slug: string
-  plan: "trial" | "starter" | "pro"
+  plan: string
   status?: "active" | "inactive"
   trialEndsAt?: string
   settings?: TenantSettings

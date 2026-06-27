@@ -1,5 +1,5 @@
 import api from "@/lib/axios"
-import type { Package, Subscription, UsageStatus, UpgradeRequestResult, CheckoutInfo } from "@/types/billing.types"
+import type { Package, Subscription, UsageStatus, UpgradeRequestResult, CheckoutInfo, TransactionPage } from "@/types/billing.types"
 
 export const billingService = {
   async getPackages(): Promise<Package[]> {
@@ -36,6 +36,13 @@ export const billingService = {
     })
     return data
   },
+
+  async getTransactions(page: number = 0, size: number = 20): Promise<TransactionPage> {
+    const { data } = await api.get("/api/v1/billing/subscriptions/transactions", {
+      params: { page, size }
+    })
+    return data
+  },
 }
 
-export type { Package, Subscription, UsageStatus, UpgradeRequestResult, CheckoutInfo }
+export type { Package, Subscription, UsageStatus, UpgradeRequestResult, CheckoutInfo, TransactionPage }

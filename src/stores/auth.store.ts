@@ -16,6 +16,7 @@ interface AuthState {
   refreshToken: () => Promise<void>
   setAuth: (data: AuthResponse) => void
   setUser: (user: User) => void
+  updateTenantPlan: (plan: string) => void
   updateTenantSettings: (settings: Record<string, unknown>) => void
 }
 
@@ -106,6 +107,12 @@ export const useAuthStore = create<AuthState>()(
         })
         set({ accessToken: data.accessToken, refreshTokenValue: data.refreshToken ?? currentRefreshToken })
         setCookie("access_token", data.accessToken)
+      },
+
+      updateTenantPlan: (plan: string) => {
+        set((state) => ({
+          tenant: state.tenant ? { ...state.tenant, plan } : null,
+        }))
       },
 
       updateTenantSettings: (settings) => {

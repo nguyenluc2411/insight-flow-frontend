@@ -135,3 +135,39 @@ export interface Page<T> {
   number: number
   size: number
 }
+
+// ── Refunds (manual reconciliation of mismatched transfers) ──────────────────
+// Mirrors billing-service PaymentTransactionResponse (AdminRefundController).
+// A transfer lands here as PENDING_REFUND when the customer paid the wrong
+// amount / duplicated a payment; an admin confirms the out-of-band refund.
+
+export type RefundStatus = "SUCCESS" | "PENDING_REFUND" | "REFUNDED" | "JUNK" | string
+
+export interface RefundTransaction {
+  id: string
+  sepayId: string
+  /** Null for transfers that could not be matched to a tenant. */
+  tenantId: string | null
+  packageCode: string | null
+  amount: number | null
+  /** Receiving (merchant) bank account. */
+  accountNumber: string | null
+  /** Sender account — usually null; reconcile via referenceCode instead. */
+  senderAccountNumber: string | null
+  /** Bank/SePay reference code — the reliable key to match a bank statement. */
+  referenceCode: string | null
+  /** Raw bank transfer memo. */
+  content: string | null
+  status: RefundStatus
+  /** Why the transfer needs a refund, plus the admin audit trail. */
+  errorReason: string | null
+  /** Actual bank-transfer time reported by the webhook. */
+  transactionDate: string | null
+  createdAt: string
+  updatedAt: string | null
+}
+
+export interface ConfirmRefundResult {
+  status: string
+  message: string
+}

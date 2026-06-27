@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuthStore } from "@/stores/auth.store"
@@ -9,11 +9,30 @@ import { Logo } from "@/components/common/Logo"
 
 const ADMIN_ROLE = "SUPER_ADMIN"
 
-const NAV = [
+type NavLeaf = { label: string; href: string; icon?: string }
+type NavGroup = { label: string; icon: string; children: NavLeaf[] }
+type NavItem = NavLeaf | NavGroup
+
+const NAV: NavItem[] = [
   { label: "Tổng quan", href: "/admin", icon: "monitoring" },
+  { label: "Phân tích Phễu", href: "/admin/analytics", icon: "filter_alt" },
+  { label: "Tin tức", href: "/admin/news", icon: "newspaper" },
   { label: "Khách hàng", href: "/admin/tenants", icon: "groups" },
+  {
+    label: "Giao dịch",
+    icon: "receipt_long",
+    children: [
+      { label: "Đã trả tiền thành công", href: "/admin/transactions/paid" },
+      { label: "Hoàn tiền", href: "/admin/transactions/refunds" },
+      { label: "Đã hoàn tiền", href: "/admin/transactions/refunded" },
+      { label: "Giao dịch rác", href: "/admin/transactions/junk" },
+    ],
+  },
   { label: "Gói & Giá", href: "/admin/plans", icon: "sell" },
 ]
+
+// Flattened leaf links for the compact mobile top-nav.
+const MOBILE_LINKS: NavLeaf[] = NAV.flatMap((i) => ("children" in i ? i.children : [i]))
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, logout } = useAuthStore()
@@ -52,24 +71,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </span>
           </div>
           <nav className="flex-1 p-3 space-y-1">
-            {NAV.map((item) => {
-              const active = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition",
-                    active
-                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  )}
-                >
-                  <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                  {item.label}
-                </Link>
+            {NAV.map((item) =>
+              "children" in item ? (
+                <NavGroupItem key={item.label} item={item} pathname={pathname} />
+              ) : (
+                <NavLink key={item.href} item={item} active={pathname === item.href} />
               )
-            })}
+            )}
           </nav>
           <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-1">
             <div className="px-3 py-2">
@@ -99,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex-1 min-w-0">
           {/* Mobile top nav */}
           <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-x-auto">
-            {NAV.map((item) => (
+            {MOBILE_LINKS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -124,6 +132,82 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
         </div>
       </div>
+    </div>
+  )
+}
+
+/** A single sidebar link. */
+function NavLink({ item, active }: { item: NavLeaf; active: boolean }) {
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition",
+        active
+          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+      )}
+    >
+      {item.icon && <span className="material-symbols-outlined text-[20px]">{item.icon}</span>}
+      {item.label}
+    </Link>
+  )
+}
+
+/** A collapsible sidebar group that expands to its child links. */
+function NavGroupItem({ item, pathname }: { item: NavGroup; pathname: string }) {
+  const anyActive = item.children.some((c) => pathname === c.href)
+  const [open, setOpen] = useState(anyActive)
+
+  // Auto-expand when navigating into one of its children.
+  useEffect(() => {
+    if (anyActive) setOpen(true)
+  }, [anyActive])
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition",
+          anyActive
+            ? "text-indigo-700 dark:text-indigo-300"
+            : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+        )}
+      >
+        <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+        {item.label}
+        <span
+          className={cn(
+            "material-symbols-outlined text-[20px] ml-auto transition-transform",
+            open && "rotate-180"
+          )}
+        >
+          expand_more
+        </span>
+      </button>
+      {open && (
+        <div className="mt-1 ml-3 pl-3 border-l border-slate-200 dark:border-slate-700 space-y-1">
+          {item.children.map((c) => {
+            const active = pathname === c.href
+            return (
+              <Link
+                key={c.href}
+                href={c.href}
+                className={cn(
+                  "block px-3 py-2 rounded-lg text-sm font-medium transition",
+                  active
+                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                )}
+              >
+                {c.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

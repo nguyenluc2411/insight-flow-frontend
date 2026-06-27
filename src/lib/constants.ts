@@ -20,6 +20,8 @@ export const ROUTES = {
   SETTINGS_PROFILE: "/settings/profile",
   SETTINGS_INTEGRATIONS: "/settings/integrations",
   SETTINGS_BILLING: "/settings/billing",
+  SETTINGS_TRANSACTIONS: "/settings/transactions",
+  NEWS: "/news",
 }
 
 // featureRequired marks which plan entitlement unlocks the item (see useEntitlements).
@@ -32,6 +34,7 @@ export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequ
   { label: "Kiểm tra Sức khỏe", href: ROUTES.HEALTH_CHECK, icon: "monitor_heart" },
   { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights", featureRequired: "DEMAND_FORECAST" },
   { label: "Đề xuất", href: ROUTES.RECOMMENDATIONS, icon: "recommend", featureRequired: "INVENTORY_RECOMMEND" },
+  { label: "Tin tức & Thông báo", href: ROUTES.NEWS, icon: "newspaper" },
 ]
 
 // Feature metadata shown on locked pages (title + what the feature does + which plan unlocks it).

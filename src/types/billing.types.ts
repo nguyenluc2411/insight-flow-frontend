@@ -24,6 +24,7 @@ export interface Subscription {
   id: string
   tenantId: string
   planId: string
+  packageCode: string | null
   priceAtSubscription: number
   featuresAtSubscription: string[]
   limitsAtSubscription: Record<string, unknown>
@@ -69,4 +70,35 @@ export interface CheckoutInfo {
   bankId: string
   accountNo: string
   accountName: string
+}
+
+export interface PaymentTransaction {
+  id: string
+  sepayId: string
+  tenantId: string
+  packageCode: string
+  amount: number
+  accountNumber: string
+  senderAccountNumber: string
+  referenceCode: string
+  transactionDate: string
+  content: string
+  status: string
+  errorReason: string
+  transactionCode: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TransactionPage {
+  content: PaymentTransaction[]
+  pageable: any
+  totalElements: number
+  totalPages: number
+  last: boolean
+  size: number
+  number: number
+  first: boolean
+  numberOfElements: number
+  empty: boolean
 }

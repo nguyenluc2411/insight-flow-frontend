@@ -9,6 +9,7 @@ const SETTINGS_TABS = [
   { href: ROUTES.SETTINGS_PROFILE, label: "Thông tin cá nhân", icon: "person" },
   { href: ROUTES.SETTINGS_INTEGRATIONS, label: "Kết nối & Tích hợp", icon: "cable" },
   { href: ROUTES.SETTINGS_BILLING, label: "Gói dịch vụ", icon: "credit_card" },
+  { href: ROUTES.SETTINGS_TRANSACTIONS, label: "Lịch sử giao dịch", icon: "receipt_long" },
 ]
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
