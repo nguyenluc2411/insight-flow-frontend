@@ -12,6 +12,7 @@ import Paragraph from "@editorjs/paragraph";
 import api from "@/lib/axios";
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth.store";
+import { compressImage } from "@/lib/image-utils";
 
 interface BlockEditorProps {
   data?: OutputData;
@@ -38,7 +39,8 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ data, onChange, readOnly = fa
               uploader: {
                 uploadByFile: async (file: File) => {
                   const formData = new FormData();
-                  formData.append("image", file);
+                  const compressedFile = await compressImage(file);
+                  formData.append("image", compressedFile);
                   try {
                     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
                     const token = useAuthStore.getState().accessToken;

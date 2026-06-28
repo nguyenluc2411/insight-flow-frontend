@@ -9,6 +9,7 @@ import dynamic from "next/dynamic";
 import api from "@/lib/axios";
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth.store";
+import { compressImage } from "@/lib/image-utils";
 
 const BlockEditor = dynamic(() => import("@/components/news/BlockEditor"), { ssr: false });
 
@@ -79,7 +80,8 @@ export default function CreateNewsPage() {
                             onChange={async (e) => {
                                 if (e.target.files && e.target.files[0]) {
                                     const formData = new FormData();
-                                    formData.append("image", e.target.files[0]);
+                                    const compressedFile = await compressImage(e.target.files[0]);
+                                    formData.append("image", compressedFile);
                                     try {
                                         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
                                         const token = useAuthStore.getState().accessToken;
