@@ -79,7 +79,11 @@ export default function CreateNewsPage() {
                                     const formData = new FormData();
                                     formData.append("image", e.target.files[0]);
                                     try {
-                                        const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData);
+                                        const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData, {
+                                            headers: {
+                                                "Content-Type": "multipart/form-data"
+                                            }
+                                        });
                                         if (response.data.success) {
                                             setCoverImageUrl(response.data.file.url);
                                         }
