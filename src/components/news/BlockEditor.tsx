@@ -38,9 +38,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ data, onChange, readOnly = fa
                   const formData = new FormData();
                   formData.append("image", file);
                   try {
-                    const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData, {
-                      headers: { "Content-Type": "multipart/form-data" },
-                    });
+                    const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData);
                     return {
                       success: 1,
                       file: { url: response.data.file.url },
