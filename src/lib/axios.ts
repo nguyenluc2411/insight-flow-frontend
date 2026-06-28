@@ -10,12 +10,6 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken
   if (token) config.headers.Authorization = `Bearer ${token}`
-  
-  // Let the browser automatically set the Content-Type with boundary for FormData
-  if (config.data instanceof FormData) {
-    delete config.headers["Content-Type"]
-  }
-  
   return config
 })
 

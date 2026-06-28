@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import api from "@/lib/axios";
+import axios from "axios";
+import { useAuthStore } from "@/stores/auth.store";
 
 const BlockEditor = dynamic(() => import("@/components/news/BlockEditor"), { ssr: false });
 
@@ -79,7 +81,11 @@ export default function CreateNewsPage() {
                                     const formData = new FormData();
                                     formData.append("image", e.target.files[0]);
                                     try {
-                                        const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData);
+                                        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+                                        const token = useAuthStore.getState().accessToken;
+                                        const response = await axios.post(`${baseUrl}/api/v1/catalog/admin/news/upload-image`, formData, {
+                                            headers: token ? { Authorization: `Bearer ${token}` } : {}
+                                        });
                                         if (response.data.success) {
                                             setCoverImageUrl(response.data.file.url);
                                         }

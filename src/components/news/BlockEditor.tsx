@@ -10,6 +10,8 @@ import List from "@editorjs/list";
 // @ts-ignore
 import Paragraph from "@editorjs/paragraph";
 import api from "@/lib/axios";
+import axios from "axios";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface BlockEditorProps {
   data?: OutputData;
@@ -38,7 +40,11 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ data, onChange, readOnly = fa
                   const formData = new FormData();
                   formData.append("image", file);
                   try {
-                    const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData);
+                    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+                    const token = useAuthStore.getState().accessToken;
+                    const response = await axios.post(`${baseUrl}/api/v1/catalog/admin/news/upload-image`, formData, {
+                      headers: token ? { Authorization: `Bearer ${token}` } : {}
+                    });
                     return {
                       success: 1,
                       file: { url: response.data.file.url },
