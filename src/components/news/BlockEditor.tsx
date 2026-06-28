@@ -9,6 +9,7 @@ import ImageTool from "@editorjs/image";
 import List from "@editorjs/list";
 // @ts-ignore
 import Paragraph from "@editorjs/paragraph";
+import api from "@/lib/axios";
 
 interface BlockEditorProps {
   data?: OutputData;
@@ -32,14 +33,26 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ data, onChange, readOnly = fa
           image: {
             class: ImageTool as any,
             config: {
-              endpoints: {
-                byFile: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/catalog/admin/news/upload-image`,
+              uploader: {
+                uploadByFile: async (file: File) => {
+                  const formData = new FormData();
+                  formData.append("image", file);
+                  try {
+                    const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData, {
+                      headers: { "Content-Type": "multipart/form-data" },
+                    });
+                    return {
+                      success: 1,
+                      file: { url: response.data.file.url },
+                    };
+                  } catch (error) {
+                    console.error("Image upload failed", error);
+                    return { success: 0 };
+                  }
+                },
               },
-              additionalRequestHeaders: {
-                Authorization: `Bearer ${localStorage.getItem('auth-storage') ? JSON.parse(localStorage.getItem('auth-storage') as string)?.state?.accessToken : ''}`
-              }
-            }
-          }
+            },
+          },
         },
         onChange: async () => {
           if (editorRef.current) {

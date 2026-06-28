@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter, useParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import api from "@/lib/axios";
 
 const BlockEditor = dynamic(() => import("@/components/news/BlockEditor"), { ssr: false });
 
@@ -105,16 +106,13 @@ export default function EditNewsPage() {
                                     const formData = new FormData();
                                     formData.append("image", e.target.files[0]);
                                     try {
-                                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/catalog/admin/news/upload-image`, {
-                                            method: "POST",
+                                        const response = await api.post("/api/v1/catalog/admin/news/upload-image", formData, {
                                             headers: {
-                                                Authorization: `Bearer ${localStorage.getItem('auth-storage') ? JSON.parse(localStorage.getItem('auth-storage') as string)?.state?.accessToken : ''}`
-                                            },
-                                            body: formData,
+                                                "Content-Type": "multipart/form-data"
+                                            }
                                         });
-                                        const data = await res.json();
-                                        if (data.success) {
-                                            setCoverImageUrl(data.file.url);
+                                        if (response.data.success) {
+                                            setCoverImageUrl(response.data.file.url);
                                         }
                                     } catch (err) {
                                         console.error(err);
