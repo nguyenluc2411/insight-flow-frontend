@@ -41,9 +41,14 @@ const BlockEditor: React.FC<BlockEditorProps> = ({ data, onChange, readOnly = fa
                   formData.append("image", compressedFile);
                   try {
                     const response = await api.postForm("/api/v1/catalog/admin/news/upload-image", formData);
+                    let finalUrl = response.data.file.url;
+                    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+                    if (finalUrl.startsWith("http://localhost:8080") && baseUrl !== "http://localhost:8080") {
+                      finalUrl = finalUrl.replace("http://localhost:8080", baseUrl);
+                    }
                     return {
                       success: 1,
-                      file: { url: response.data.file.url },
+                      file: { url: finalUrl },
                     };
                   } catch (error) {
                     console.error("Image upload failed", error);

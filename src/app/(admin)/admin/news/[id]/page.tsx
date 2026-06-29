@@ -110,7 +110,12 @@ export default function EditNewsPage() {
                                     try {
                                         const response = await api.postForm("/api/v1/catalog/admin/news/upload-image", formData);
                                         if (response.data.success) {
-                                            setCoverImageUrl(response.data.file.url);
+                                            let finalUrl = response.data.file.url;
+                                            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+                                            if (finalUrl.startsWith("http://localhost:8080") && baseUrl !== "http://localhost:8080") {
+                                                finalUrl = finalUrl.replace("http://localhost:8080", baseUrl);
+                                            }
+                                            setCoverImageUrl(finalUrl);
                                         }
                                     } catch (err) {
                                         console.error(err);
