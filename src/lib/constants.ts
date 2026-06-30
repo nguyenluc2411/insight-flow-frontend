@@ -29,7 +29,6 @@ export const ROUTES = {
 // upgrade CTA (MVP: discoverability + upsell, not hidden).
 export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequired?: string }[] = [
   { label: "Trang chủ", href: ROUTES.DASHBOARD, icon: "home" },
-  { label: "Ghi nhận doanh số", href: ROUTES.SALES_RECORD, icon: "edit_note" },
   { label: "Cơ hội thị trường", href: ROUTES.MARKET, icon: "trending_up", featureRequired: "SALES_ANALYTICS" },
   { label: "Kiểm tra Sức khỏe", href: ROUTES.HEALTH_CHECK, icon: "monitor_heart" },
   { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights", featureRequired: "DEMAND_FORECAST" },
