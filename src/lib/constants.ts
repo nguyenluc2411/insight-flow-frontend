@@ -32,7 +32,7 @@ export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequ
   { label: "Cơ hội thị trường", href: ROUTES.MARKET, icon: "trending_up", featureRequired: "SALES_ANALYTICS" },
   { label: "Kiểm tra Sức khỏe", href: ROUTES.HEALTH_CHECK, icon: "monitor_heart" },
   { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights", featureRequired: "DEMAND_FORECAST" },
-  { label: "Tin tức & Thông báo", href: ROUTES.NEWS, icon: "newspaper" },
+  { label: "Tin tức", href: ROUTES.NEWS, icon: "newspaper" },
 ]
 
 // Feature metadata shown on locked pages (title + what the feature does + which plan unlocks it).

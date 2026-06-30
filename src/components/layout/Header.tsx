@@ -67,7 +67,7 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-colors",
                     isActive
                       ? "text-primary border-b-2 border-primary bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-400"
                       : "text-slate-600 hover:text-primary hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800",
@@ -185,7 +185,7 @@ export function Header() {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
+                    "flex items-center gap-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors",
                     isActive
                       ? "text-primary bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-400"
                       : "text-slate-600 hover:text-primary hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800",
