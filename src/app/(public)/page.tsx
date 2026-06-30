@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ROUTES, APP_FULL_NAME } from "@/lib/constants"
 import { LandingPricing } from "@/components/landing/LandingPricing"
 import { Logo } from "@/components/common/Logo"
+import { Header } from "@/components/layout/Header"
 
 const PROBLEMS = [
   { icon: "inventory_2", title: "Tồn kho quá mức", desc: "Vốn bị chôn vùi trong hàng không bán được, phải giảm giá mạnh cuối mùa" },
@@ -48,31 +49,7 @@ const FEATURES = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-b border-slate-100 dark:border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Logo size={30} />
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
-            <a href="#features" className="hover:text-primary transition">Tính năng</a>
-            <a href="#how-it-works" className="hover:text-primary transition">Cách hoạt động</a>
-            <a href="#pricing" className="hover:text-primary transition">Bảng giá</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Link
-              href={ROUTES.LOGIN}
-              className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition"
-            >
-              Đăng nhập
-            </Link>
-            <Link
-              href={ROUTES.REGISTER}
-              className="px-4 py-2 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition"
-            >
-              Bắt đầu ngay
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-indigo-950 dark:via-slate-950 dark:to-purple-950 py-20 px-4">
@@ -92,18 +69,11 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href={ROUTES.REGISTER}
+                  href={ROUTES.HEALTH_CHECK_IMPORT}
                   className="px-6 py-3 bg-brand-gradient text-white font-bold rounded-xl hover:opacity-90 transition flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
-                  Bắt đầu Đánh giá AI
-                </Link>
-                <Link
-                  href={ROUTES.DASHBOARD}
-                  className="px-6 py-3 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:border-primary/50 transition flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[18px]">preview</span>
-                  Xem Bảng điều khiển Mẫu
+                  Bắt đầu phân tích ngay
                 </Link>
               </div>
               {/* Brand logos */}
@@ -264,10 +234,10 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              href={ROUTES.REGISTER}
+              href={ROUTES.HEALTH_CHECK_IMPORT}
               className="px-8 py-4 bg-brand-gradient text-white font-bold rounded-2xl hover:opacity-90 transition text-lg"
             >
-              Bắt đầu miễn phí ngay
+              Bắt đầu phân tích ngay
             </Link>
             <div className="text-slate-400 text-sm">
               Đã có tài khoản?{" "}
