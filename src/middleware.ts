@@ -14,7 +14,14 @@ export function middleware(request: NextRequest) {
   // stale token bounces the user off /login straight back into the old account.
   const accessToken = isTokenLive(rawToken) ? rawToken : undefined
 
-  const isPublic = PUBLIC_ROUTES.includes(pathname) || pathname.startsWith("/news")
+  const GOOGLE_VERIFY_REGEX = /^\/google[a-zA-Z0-9]+\.html$/;
+
+const isPublic =
+  PUBLIC_ROUTES.includes(pathname) ||
+  pathname.startsWith("/news") ||
+  GOOGLE_VERIFY_REGEX.test(pathname) ||
+  pathname === "/robots.txt" ||
+  pathname === "/sitemap.xml";
   const isOnboarding = pathname.startsWith(ONBOARDING_ROUTE)
   const isAuthPage = pathname === "/login" || pathname === "/register"
 
@@ -49,5 +56,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|public).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+  ],
 }
