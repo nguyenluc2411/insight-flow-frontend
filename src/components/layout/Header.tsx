@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { NAV_ITEMS, ROUTES } from "@/lib/constants"
 import { useAuthStore } from "@/stores/auth.store"
+import { isTokenLive } from "@/lib/auth-routing"
 import { useEntitlements } from "@/hooks/use-entitlements"
 import { Logo } from "@/components/common/Logo"
 
@@ -16,8 +17,15 @@ export function Header() {
   const [lang, setLang] = useState<"VI" | "EN">("VI")
   const [avatarOpen, setAvatarOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
-  const { user, tenant, logout, isAuthenticated } = useAuthStore()
+  const { user, tenant, logout, isAuthenticated, accessToken } = useAuthStore()
   const { hasFeature, loaded } = useEntitlements()
+
+  // Validate session on mount for public pages
+  useEffect(() => {
+    if (isAuthenticated && accessToken && !isTokenLive(accessToken)) {
+      logout()
+    }
+  }, [isAuthenticated, accessToken, logout])
 
   // Show ALL items; mark the ones the plan doesn't include as locked.
   const isLocked = (featureRequired?: string) =>
