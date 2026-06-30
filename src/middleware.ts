@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
 
     // Regular user, profile complete → keep them out of the auth pages
     if (profileComplete && isAuthPage) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+      return NextResponse.redirect(new URL("/", request.url))
     }
   }
 

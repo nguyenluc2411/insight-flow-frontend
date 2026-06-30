@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     // Authenticated but not a platform admin → bounce to the normal app.
     if (user && !isAdmin) {
-      router.replace("/dashboard")
+      router.replace("/")
     }
   }, [isAuthenticated, user, isAdmin, router])
 
@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="text-xs text-slate-400 truncate">{user.email}</p>
             </div>
             <Link
-              href="/dashboard"
+              href="/"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>

@@ -12,7 +12,7 @@ export const SUPER_ADMIN_ROLE = "SUPER_ADMIN"
 export function landingPathForUser(user: Pick<User, "roles" | "profileComplete"> | null): string {
   if (user?.roles?.includes(SUPER_ADMIN_ROLE)) return "/admin"
   if (!user?.profileComplete) return "/onboarding"
-  return "/dashboard"
+  return "/"
 }
 
 /**
