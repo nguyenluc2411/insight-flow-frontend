@@ -17,7 +17,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    const isAuthEndpoint = /\/auth\/(login|register-tenant|refresh|forgot-password|reset-password)/.test(original?.url ?? "")
+    const isAuthEndpoint = /\/auth\/(login|logout|register-tenant|refresh|forgot-password|reset-password)/.test(original?.url ?? "")
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true
       try {
@@ -27,7 +27,13 @@ api.interceptors.response.use(
         return api(original)
       } catch {
         useAuthStore.getState().logout()
-        if (typeof window !== "undefined") window.location.href = "/login"
+        if (typeof window !== "undefined") {
+          const path = window.location.pathname
+          const isPublicPage = path === "/" || path === "/login" || path === "/register" || path.startsWith("/news")
+          if (!isPublicPage) {
+            window.location.href = "/login"
+          }
+        }
       }
     }
     return Promise.reject(error)
