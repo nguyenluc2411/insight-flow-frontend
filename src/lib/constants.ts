@@ -32,7 +32,6 @@ export const NAV_ITEMS: { label: string; href: string; icon: string; featureRequ
   { label: "Cơ hội thị trường", href: ROUTES.MARKET, icon: "trending_up", featureRequired: "SALES_ANALYTICS" },
   { label: "Kiểm tra Sức khỏe", href: ROUTES.HEALTH_CHECK, icon: "monitor_heart" },
   { label: "Dự báo", href: ROUTES.FORECAST, icon: "insights", featureRequired: "DEMAND_FORECAST" },
-  { label: "Đề xuất", href: ROUTES.RECOMMENDATIONS, icon: "recommend", featureRequired: "INVENTORY_RECOMMEND" },
   { label: "Tin tức & Thông báo", href: ROUTES.NEWS, icon: "newspaper" },
 ]
 
