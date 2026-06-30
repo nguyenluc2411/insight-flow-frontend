@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
   // stale token bounces the user off /login straight back into the old account.
   const accessToken = isTokenLive(rawToken) ? rawToken : undefined
 
-  const isPublic = PUBLIC_ROUTES.includes(pathname)
+  const isPublic = PUBLIC_ROUTES.includes(pathname) || pathname.startsWith("/news")
   const isOnboarding = pathname.startsWith(ONBOARDING_ROUTE)
   const isAuthPage = pathname === "/login" || pathname === "/register"
 

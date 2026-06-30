@@ -89,9 +89,20 @@ export function Header() {
 
             {/* Avatar Dropdown or Login Button */}
             {!isAuthenticated ? (
-              <Link href={ROUTES.LOGIN} className="hidden sm:flex items-center gap-1 px-4 py-1.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors">
-                Đăng nhập
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={ROUTES.LOGIN}
+                  className="hidden sm:flex text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href={ROUTES.REGISTER}
+                  className="hidden sm:flex items-center gap-1 px-4 py-1.5 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition"
+                >
+                  Bắt đầu ngay
+                </Link>
+              </div>
             ) : (
               <div className="relative" ref={avatarRef}>
                 <button
