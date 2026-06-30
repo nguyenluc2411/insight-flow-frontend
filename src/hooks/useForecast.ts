@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { bffService } from "@/services/bff.service"
 import { mlService } from "@/services/ml.service"
 import { useAuthStore } from "@/stores/auth.store"
-import type { ForecastSummaryResponse, ForecastResponse } from "@/types"
+import type { ForecastSummaryResponse, ForecastResponse, ForecastSeriesResponse } from "@/types"
 
 export type { ForecastSummaryResponse }
 
@@ -25,6 +25,22 @@ export function useForecast(variantId: string | undefined, days = 30) {
   return useQuery<ForecastResponse>({
     queryKey: ["forecast", tenantId, variantId, days],
     queryFn: () => mlService.getForecast(variantId!, days),
+    enabled: !!tenantId && !!variantId,
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+/** Per-variant forecast + actual history + measured accuracy, for the chart */
+export function useForecastSeries(
+  variantId: string | undefined,
+  days = 30,
+  historyDays = 90,
+  sku?: string,
+) {
+  const tenantId = useAuthStore((s) => s.tenant?.id)
+  return useQuery<ForecastSeriesResponse>({
+    queryKey: ["forecast-series", tenantId, variantId, days, historyDays],
+    queryFn: () => mlService.getForecastSeries(variantId!, days, historyDays, sku),
     enabled: !!tenantId && !!variantId,
     staleTime: 10 * 60 * 1000,
   })

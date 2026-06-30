@@ -43,12 +43,17 @@ export interface TopProduct {
   sku?: string
   forecastDays30: number
   confidence: string
+  /** Measured WAPE for this variant's model (0.23 = 23%); null when cold-start. */
+  wape?: number | null
+  measured?: boolean | null
 }
 
 export interface ForecastSummaryResponse {
   categoryTrends: CategoryTrend[]
   topProducts: TopProduct[]
   overallConfidence: number
+  /** Avg measured WAPE across backtested variants (0.23 = 23%); null if none. */
+  overallWape?: number | null
   partial: boolean
   hasColdStart?: boolean
   message?: string

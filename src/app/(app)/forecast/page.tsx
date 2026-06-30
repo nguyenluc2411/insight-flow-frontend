@@ -1,11 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import { StatusBadge } from "@/components/common/StatusBadge"
 import { ConfidenceBadge } from "@/components/common/ConfidenceBadge"
 import { RiskBadge } from "@/components/common/RiskBadge"
 import { TrendIndicator } from "@/components/common/TrendIndicator"
 import { AIInsightBox } from "@/components/common/AIInsightBox"
-import { useForecastSummary } from "@/hooks/useForecast"
+import { ForecastChart } from "@/components/forecast/ForecastChart"
+import { useForecastSummary, useForecastSeries } from "@/hooks/useForecast"
 import { useCategories } from "@/hooks/useCatalog"
 import { useRecommendations } from "@/hooks/useRecommendations"
 import { FeatureGate } from "@/components/feature/FeatureGate"
@@ -13,13 +15,6 @@ import { getForecastPeriod } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { catalogService } from "@/services/catalog.service"
 import { useAuthStore } from "@/stores/auth.store"
-
-const AI_STRATEGY_ITEMS = [
-  "Tập trung Vải Lanh và Sợi Tự Nhiên — xu hướng chủ đạo nửa cuối năm nay.",
-  "TikTok Shop là kênh chính — ưu tiên sản phẩm có khả năng lan truyền mạnh.",
-  "Đa dạng hóa khu vực — Hà Nội đang chưa được khai thác mảng Quần hợp xu hướng.",
-  "Giảm phụ thuộc trang phục công sở — chuyển sang đồ thường ngày/Streetwear.",
-]
 
 const CONFIDENCE_VALUE: Record<string, number> = { HIGH: 90, MEDIUM: 75, LOW: 60 }
 
@@ -139,6 +134,54 @@ function ForecastPageContent() {
   const upCount = categoryTrends.filter((c) => c.trend === "UP").length
   const downCount = categoryTrends.filter((c) => c.trend === "DOWN").length
 
+  // Average measured error across backtested models, shown as a real metric.
+  const overallWape = forecast?.overallWape ?? null
+  const overallAccuracyPct = overallWape != null ? Math.max(0, Math.round((1 - overallWape) * 100)) : null
+
+  // Per-variant chart: default to the top forecast product, fall back to the
+  // first catalog variant; user can switch via the selector.
+  const allVariants = variantsPage?.content ?? []
+  const defaultVariantId = topProducts[0]?.variantId ?? allVariants[0]?.id
+  const [pickedVariantId, setPickedVariantId] = useState<string | undefined>(undefined)
+  const selectedVariantId = pickedVariantId ?? defaultVariantId
+  const selectedSku = selectedVariantId ? variantById.get(selectedVariantId)?.sku : undefined
+  const { data: chartSeries, isLoading: chartLoading } = useForecastSeries(
+    selectedVariantId,
+    30,
+    90,
+    selectedSku,
+  )
+
+  // AI strategy bullets derived from REAL forecast data (no hardcoded copy).
+  const strategyItems: string[] = []
+  if (overallAccuracyPct != null) {
+    strategyItems.push(
+      `Mô hình đang đạt độ chính xác kiểm thử ~${overallAccuracyPct}% (sai số ~${Math.round(overallWape! * 100)}%) trên các sản phẩm đã đủ dữ liệu.`,
+    )
+  }
+  if (topProducts.length > 0) {
+    const names = topProducts
+      .slice(0, 3)
+      .map((p) => resolve(p.variantId, p.sku).name)
+      .join(", ")
+    strategyItems.push(`Ưu tiên nhập kỳ tới: ${names}.`)
+  }
+  if (avoidProducts.length > 0) {
+    strategyItems.push(
+      `${avoidProducts.length} mã hàng nên giảm/ngừng nhập do nhu cầu thấp — xem bảng "Sản phẩm không nên nhập thêm".`,
+    )
+  }
+  if (forecast?.hasColdStart) {
+    strategyItems.push(
+      "Một số sản phẩm chưa đủ lịch sử bán — dự báo đang dựa trên xu hướng thị trường HCM, độ chính xác sẽ tăng sau ~4 tuần có dữ liệu thực.",
+    )
+  }
+  if (strategyItems.length === 0) {
+    strategyItems.push(
+      "Chưa đủ dữ liệu bán hàng để đưa ra chiến lược. Hãy kết nối POS hoặc nhập lịch sử bán hàng để kích hoạt dự báo.",
+    )
+  }
+
   const stats: { label: string; value: string; subtitle: string; pill?: { dir: PillDir; text: string } | null }[] = [
     {
       label: "Nhóm sản phẩm tăng",
@@ -161,7 +204,7 @@ function ForecastPageContent() {
     {
       label: "Độ tin cậy AI",
       value: isLoading ? "…" : confidence > 0 ? `${confidence}%` : "—",
-      subtitle: "dựa trên dữ liệu thực",
+      subtitle: overallAccuracyPct != null ? `sai số kiểm thử ~${100 - overallAccuracyPct}%` : "dựa trên dữ liệu thực",
       pill: confidence >= 80 ? { dir: "up", text: "Cao" } : confidence >= 60 ? { dir: "neutral", text: "Trung bình" } : null,
     },
   ]
@@ -214,6 +257,33 @@ function ForecastPageContent() {
         </div>
       )}
 
+      {/* Per-variant forecast chart */}
+      {selectedVariantId && (
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Biểu đồ dự báo theo sản phẩm</h2>
+            <label className="flex items-center gap-2 text-sm">
+              <span className="text-slate-500 dark:text-slate-400">Sản phẩm:</span>
+              <select
+                value={selectedVariantId}
+                onChange={(e) => setPickedVariantId(e.target.value)}
+                className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/40 max-w-[260px]"
+              >
+                {allVariants.map((v) => {
+                  const r = resolve(v.id, v.sku)
+                  return (
+                    <option key={v.id} value={v.id}>
+                      {r.name}
+                    </option>
+                  )
+                })}
+              </select>
+            </label>
+          </div>
+          <ForecastChart series={chartSeries} isLoading={chartLoading} />
+        </div>
+      )}
+
       {/* Category Trends */}
       <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800 mb-8">
         <h2 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-4">Xu hướng theo danh mục</h2>
@@ -233,7 +303,6 @@ function ForecastPageContent() {
                     {categoryNameMap[cat.category] ?? cat.category}
                   </p>
                   <TrendIndicator value={cat.pct} />
-                  <ConfidenceBadge value={isDown ? 75 : 85} />
                   <span
                     className={`inline-flex items-center px-2.5 py-1 text-[11px] font-bold rounded border uppercase tracking-wider ${
                       isDown ? PILL_STYLES.down : cat.trend === "UP" ? PILL_STYLES.up : PILL_STYLES.neutral
@@ -335,8 +404,8 @@ function ForecastPageContent() {
         )}
       </div>
 
-      {/* AI Strategy Box */}
-      <AIInsightBox title={`Chiến lược AI cho ${getForecastPeriod()}`} items={AI_STRATEGY_ITEMS} variant="dark" />
+      {/* AI Strategy Box — derived from real forecast data */}
+      <AIInsightBox title={`Chiến lược AI cho ${getForecastPeriod()}`} items={strategyItems} variant="dark" />
     </div>
   )
 }

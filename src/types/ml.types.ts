@@ -6,15 +6,54 @@ export interface ForecastPoint {
   upperBound: number
 }
 
+/** Forecast basis returned by ml-service */
+export type ForecastBasis =
+  | "variant"
+  | "market_trends_hcm"
+  | "market_trends_hcm_generic"
+  | "no_base_model"
+
+export type Confidence = "high" | "medium" | "low" | "none"
+
+/** Measured backtest error for a variant model (null/absent for cold-start) */
+export interface AccuracyInfo {
+  wape: number | null // Weighted Absolute % Error, e.g. 0.23 = 23%
+  rmse: number | null
+  holdoutDays: number | null
+  modelVersion: string | null
+  measured: boolean
+}
+
 /** Matches ML service ForecastResponse schema */
 export interface ForecastResponse {
   variantId: string
   tenantId: string
   forecastDays: number
-  confidence: "high" | "medium" | "low" | "none"
-  basis: "variant" | "category" | "moving_average"
+  confidence: Confidence
+  basis: ForecastBasis
   predictions: ForecastPoint[]
+  accuracy?: AccuracyInfo | null
   generatedAt: string
+}
+
+/** One actual-sales history point (for the forecast chart) */
+export interface HistoryPoint {
+  date: string
+  actual: number
+}
+
+/** Matches ML service ForecastSeriesResponse schema */
+export interface ForecastSeriesResponse {
+  variantId: string
+  tenantId: string
+  forecastDays: number
+  confidence: Confidence
+  basis: ForecastBasis
+  history: HistoryPoint[]
+  predictions: ForecastPoint[]
+  accuracy?: AccuracyInfo | null
+  generatedAt: string
+  warning?: string | null
 }
 
 /** Matches ML service RecommendationResponse schema */
