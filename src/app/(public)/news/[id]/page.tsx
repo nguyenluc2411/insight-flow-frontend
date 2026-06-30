@@ -123,7 +123,15 @@ export default function PublicNewsDetailPage() {
                         <div className="space-y-8">
                             {related.map(rel => (
                                 <div key={rel.id} className="group cursor-pointer" onClick={() => router.push(`/news/${rel.id}`)}>
-                                    <div className="h-32 bg-gray-100 rounded-lg mb-3 overflow-hidden"></div>
+                                    <div className="h-32 bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                                        {rel.coverImageUrl ? (
+                                            <img src={rel.coverImageUrl} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                <span className="material-symbols-outlined text-4xl">image</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <h4 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 line-clamp-2 leading-snug">{rel.title}</h4>
                                     <p className="text-sm text-gray-500 mt-2 font-medium">{new Date(rel.publishedAt || '').toLocaleDateString()}</p>
                                 </div>
