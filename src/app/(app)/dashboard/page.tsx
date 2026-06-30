@@ -1,87 +1,100 @@
 "use client"
 
+import { KPICard } from "@/components/common/KPICard"
 import Link from "next/link"
 import { ROUTES } from "@/lib/constants"
+import { useDashboard } from "@/hooks/useDashboard"
+import { useInventorySummary } from "@/hooks/useCatalog"
 import { useAuthStore } from "@/stores/auth.store"
 
 export default function DashboardPage() {
+  const { data: overview, isLoading: bffLoading } = useDashboard()
+  const { data: invSummary, isLoading: invLoading } = useInventorySummary()
   const user = useAuthStore((s) => s.user)
+  const tenant = useAuthStore((s) => s.tenant)
+
+  const isLoading = bffLoading || invLoading
+
+  // BFF may be DOWN — fallback to catalog inventory for totalSKU
+  const totalSKU = overview?.totalSKU ?? invSummary?.totalSKU ?? 0
+  const lowStockCount = invSummary?.lowStockCount ?? 0
+  const mlOnline = overview?.mlStatus === "UP"
+  const hasData = totalSKU > 0
+
+  const kpis = [
+    {
+      label: "Tổng mã hàng",
+      value: isLoading ? "..." : String(totalSKU),
+      subtitle: "sản phẩm đang theo dõi",
+      trendType: "neutral" as const,
+    },
+    {
+      label: "Thiếu hàng",
+      value: isLoading ? "..." : String(lowStockCount),
+      subtitle: "mã hàng dưới ngưỡng đặt lại hàng",
+      trendType: lowStockCount > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "Cảnh báo AI",
+      value: isLoading ? "..." : String(overview?.highPriorityAlerts ?? 0),
+      subtitle: "ưu tiên cao cần xử lý",
+      trendType: (overview?.highPriorityAlerts ?? 0) > 0 ? ("down" as const) : ("neutral" as const),
+    },
+    {
+      label: "Gói dịch vụ",
+      value: tenant?.plan ? tenant.plan.toUpperCase() : "TRIAL",
+      subtitle: "gói đang sử dụng",
+      trendType: "neutral" as const,
+    },
+  ]
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-indigo-950 dark:via-slate-950 dark:to-purple-950 -m-4 sm:-m-8 p-8 min-h-[calc(100vh-64px)] flex flex-col justify-center">
-      <div className="max-w-6xl mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 px-3 py-1.5 rounded-full text-xs font-bold mb-6">
-              <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-              AI được đào tạo trên dữ liệu thời trang Việt Nam
-            </div>
-            
-            {user?.fullName && (
-              <h2 className="text-2xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
-                Xin chào, {user.fullName.split(" ").pop()}!
-              </h2>
-            )}
-
-            <h1 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-slate-100 leading-tight mb-4">
-              Biến Dữ liệu Thời trang thành{" "}
-              <span className="gradient-text">Sự chắc chắn về Nhu cầu</span>
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-              AI dự báo xu hướng, tối ưu tồn kho và đề xuất hành động cụ thể — giúp shop thời trang Việt Nam tăng tỷ lệ bán ra và giảm rủi ro tồn kho.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href={ROUTES.HEALTH_CHECK_IMPORT}
-                className="px-6 py-3 bg-brand-gradient text-white font-bold rounded-xl hover:opacity-90 transition flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
-                Bắt đầu phân tích ngay
-              </Link>
-            </div>
-            {/* Brand logos */}
-            <div className="flex items-center gap-4 mt-8">
-              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-                Tin dùng bởi:
-              </p>
-              {["VOGUE VN", "LOCAL BRAND VN", "FASHION WEEK"].map((brand) => (
-                <span key={brand} className="text-xs font-black text-slate-400 dark:text-slate-600 tracking-widest">
-                  {brand}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Dashboard Preview Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-              <span className="ml-2 text-xs text-slate-400">InsightFlow AI</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {[
-                { label: "Tỷ lệ bán ra", value: "+11%", color: "text-green-600" },
-                { label: "Tồn kho giảm", value: "-18%", color: "text-indigo-600" },
-                { label: "Độ tin cậy AI", value: "89%", color: "text-purple-600" },
-                { label: "Đề xuất hành động", value: "12", color: "text-amber-600" },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</p>
-                  <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="bg-indigo-900 rounded-xl p-4">
-              <p className="text-xs text-indigo-300 mb-1">Gợi ý AI</p>
-              <p className="text-sm text-white font-medium">
-                Chuyển 150 đơn vị Quần Ống Rộng → Hà Nội + TikTok để giảm tồn 33%
-              </p>
-            </div>
-          </div>
-        </div>
+    <div>
+      {/* Greeting */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          Xin chào{user?.fullName ? `, ${user.fullName.split(" ").pop()}` : ""}!
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">
+          {tenant?.name ?? "Shop của bạn"} — tổng quan hoạt động hôm nay.
+        </p>
       </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {kpis.map((kpi) => (
+          <KPICard key={kpi.label} {...kpi} />
+        ))}
+      </div>
+
+      {/* ML status indicator */}
+      {!isLoading && mlOnline === false && (
+        <div className="mb-6 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-xl p-4 flex items-center gap-3">
+          <span className="material-symbols-outlined text-amber-500 text-xl shrink-0">warning</span>
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            Dịch vụ AI đang tạm thời không khả dụng — dữ liệu hiển thị có thể chưa được cập nhật.
+          </p>
+        </div>
+      )}
+
+      {/* Empty state — shown when no data yet */}
+      {!isLoading && !hasData && (
+        <div className="mt-8 bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 rounded-xl p-5 flex items-center gap-4">
+          <span className="material-symbols-outlined text-indigo-500 text-3xl">cloud_upload</span>
+          <div className="flex-1">
+            <p className="font-semibold text-indigo-800 dark:text-indigo-200">Chưa có dữ liệu thực</p>
+            <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-0.5">
+              Tải dữ liệu đơn hàng để nhận phân tích AI chính xác
+            </p>
+          </div>
+          <Link
+            href={ROUTES.HEALTH_CHECK_IMPORT}
+            className="shrink-0 px-4 py-2 bg-brand-gradient text-white text-sm font-bold rounded-lg hover:opacity-90 transition"
+          >
+            Tải dữ liệu
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
